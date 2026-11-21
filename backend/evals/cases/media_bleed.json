@@ -1,0 +1,60 @@
+{
+  "id": "media_bleed",
+  "description": "A worn device in a living room with the TV on. Cricket commentary and an advert are audible alongside a real conversation. Guards prompt rule 13 in both directions: broadcast audio must not become anyone's task, and the user's own statement ABOUT television must still be extracted. This is the documented #1 failure of the competition - Forbes on Bee: to-dos 'teased out of entertainment content that Bee has mistaken for things I said'.",
+  "tz": "Asia/Kolkata",
+  "recorded_at": "2026-11-21T20:34:00+05:30",
+  "transcript": "That's a big shot over midwicket they will need to bring Bumrah back before the break Yeah turn it down a bit So listen I'll transfer you the rent tomorrow okay Fine Call now and get a second one absolutely free limited stock offer ends midnight What channel is this even Remind me to watch the final tomorrow I don't want to miss it again Also day after tomorrow I have to submit the hostel form",
+  "expected_participants": [],
+  "expected_items": [
+    {
+      "quote": "I'll transfer you the rent tomorrow",
+      "owner": "unknown",
+      "due_date": "2026-11-22",
+      "due_resolution": "confident",
+      "act_any": [
+        "commitment"
+      ],
+      "note": "A real commitment by a person in the room, spoken between two pieces of broadcast audio. If rule 13 is too aggressive this is the item it will swallow."
+    },
+    {
+      "quote": "watch the final tomorrow",
+      "owner": "unknown",
+      "due_date": "2026-11-22",
+      "due_resolution": "confident",
+      "act_any": [
+        "commitment",
+        "requirement"
+      ],
+      "note": "THE CRITICAL ASSERTION, and the reason rule 13 tests presence rather than topic. The subject is television, so a topic-based media rule suppresses it - but the USER said it, about their own evening, with a date. Rule 11 also applies: 'Remind me to' is folded into the thing to be remembered rather than becoming a date-less item of its own."
+    },
+    {
+      "quote": "day after tomorrow I have to submit the hostel form",
+      "owner": "unknown",
+      "due_date": "2026-11-23",
+      "due_resolution": "confident",
+      "act_any": [
+        "commitment",
+        "requirement"
+      ],
+      "note": "An ordinary personal errand, included so the case fails if rule 13 depresses extraction generally rather than only on broadcast spans."
+    }
+  ],
+  "must_suppress_as_media": [
+    "bring Bumrah back before the break",
+    "Call now and get a second one absolutely free"
+  ],
+  "tolerated_spurious": [
+    "turn it down",
+    "What channel is this",
+    "don't want to miss it"
+  ],
+  "decision_note": "The two must_suppress_as_media spans are the classic shapes: sports commentary phrased as a requirement ('they will need to bring Bumrah back'), and advertising phrased as an assignment ('Call now'). Both are grammatically perfect actionable items and belong to nobody, which is exactly why a topic-blind extractor files them. Asserting they appear in `dropped` with a media reason - rather than merely asserting they are absent from `items` - matters: absence would also be satisfied by the model simply ignoring that part of the transcript, which is luck, not suppression. If this case ever fails on item 2 while passing the suppression checks, rule 13 has become too broad and should be narrowed, not strengthened.",
+  "must_not_extract_spans": [
+    "offer ends midnight",
+    "limited stock"
+  ],
+  "must_not_extract": [
+    "anything spoken by the television - the advert or the commentary",
+    "a task belonging to a person who was not in the room"
+  ]
+}

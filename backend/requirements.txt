@@ -1,0 +1,12 @@
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+pydantic-settings>=2.6
+python-multipart>=0.0.12
+httpx>=0.27
+# Windows has no system IANA timezone database, so zoneinfo cannot resolve
+# names like "Asia/Kolkata" without this. Harmless on Linux/macOS.
+tzdata>=2024.2
+PyJWT>=2.9
+# Validates account email addresses via pydantic's EmailStr.
+email-validator>=2.2

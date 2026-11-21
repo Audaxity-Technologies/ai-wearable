@@ -1,0 +1,50 @@
+{
+  "id": "cofounder_sync",
+  "description": "The brief's canonical example: four items, four different speech acts, three date forms.",
+  "tz": "Asia/Kolkata",
+  "recorded_at": "2026-11-19T17:00:00+05:30",
+  "transcript": "Pulkit: We need to finish the investor pitch by Friday.\nManan: Yes, I'll work on the financial projections.\nPulkit: Let's meet tomorrow at 5 PM and review the wearable prototype.\nManan: Okay. Also, we should contact the V-NEST team next week about the incubation update.",
+  "expected_participants": [
+    "Pulkit",
+    "Manan"
+  ],
+  "expected_items": [
+    {
+      "quote": "We need to finish the investor pitch by Friday.",
+      "act": "requirement",
+      "owner": "group",
+      "due_date": "2026-11-20",
+      "due_resolution": "confident",
+      "note": "'We need to' is a requirement, not a commitment by Pulkit."
+    },
+    {
+      "quote": "I'll work on the financial projections.",
+      "act": "commitment",
+      "owner": "Manan",
+      "due_resolution": "none",
+      "note": "Manan committed. Attributing this to Pulkit is the worst failure mode."
+    },
+    {
+      "quote": "Let's meet tomorrow at 5 PM and review the wearable prototype.",
+      "owner": "group",
+      "due_date": "2026-11-20",
+      "due_time": "17:00",
+      "note": "'Let's' that was accepted with 'Okay' - suggestion or decision both defensible.",
+      "act_any": [
+        "suggestion",
+        "decision"
+      ]
+    },
+    {
+      "quote": "we should contact the V-NEST team next week about the incubation update",
+      "act": "suggestion",
+      "owner": "group",
+      "due_resolution": "ambiguous",
+      "note": "'next week' must NOT be resolved to a specific date."
+    }
+  ],
+  "must_not_extract": [
+    "any task assigned to Pulkit for the financial projections",
+    "a confirmed meeting rather than a proposed one"
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "id": "pronouns",
+  "description": "Pronoun resolution, prompt rule 14. Extraction is the only stage that can resolve 'he said he'd send it', because it is the only stage that can still see the conversation. Guards both directions: resolve when exactly one candidate is named, and REFUSE when two are - a wrong name here is the costliest error the product can make, and it is also the error reviewers report most in the competition ('confused them with coworkers or attributed ideas vaguely to someone').",
+  "tz": "Asia/Kolkata",
+  "recorded_at": "2026-11-21T11:00:00+05:30",
+  "transcript": "So Pulkit is handling the compliance side now He said he will send the forms by Monday Right and I also spoke to Ravi and Pulkit yesterday about the vendor contract He said he would look at it this week I am not sure which of them Also she mentioned the deadline moved but I do not remember who told me that We need to lock the pricing before Thursday",
+  "expected_participants": [],
+  "expected_items": [
+    {
+      "quote": "he will send the forms by Monday",
+      "owner": "Pulkit",
+      "due_resolution": "confident",
+      "act_any": [
+        "commitment",
+        "assignment",
+        "requirement"
+      ],
+      "note": "THE RESOLUTION CASE. Exactly one man named immediately before, and nobody else could be meant, so 'he' is Pulkit. Leaving owner as 'he' or 'unknown' here is a miss: the whole value of the product is knowing who committed."
+    },
+    {
+      "quote": "He said he would look at it this week",
+      "owner": "unknown",
+      "act_any": [
+        "commitment",
+        "assignment",
+        "requirement"
+      ],
+      "note": "THE REFUSAL CASE, and the more important of the two. Ravi and Pulkit were both named in the preceding sentence, and the speaker says outright 'I am not sure which of them'. Picking either name would tell someone they promised something they never said. 'unknown' is the correct answer."
+    },
+    {
+      "quote": "she mentioned the deadline moved",
+      "owner": "unknown",
+      "due_resolution": "none",
+      "act_any": [
+        "decision",
+        "discussion",
+        "requirement",
+        "commitment"
+      ],
+      "note": "CORRECTED 2026-11-21. This span was originally forbidden outright, which contradicted the `decision` act definition - 'a statement that a date, owner or plan HAS CHANGED is a decision, never discussion... these matter more than anything else in the conversation'. The model extracted it and was right; the case was wrong. The real assertion is narrower and more useful: no woman is named anywhere in the transcript, so the OWNER must stay 'unknown' while the decision itself survives. Rule 14's last paragraph exists because the first run dropped a whole item rather than just its owner."
+    },
+    {
+      "quote": "We need to lock the pricing before Thursday",
+      "owner": "group",
+      "due_resolution": "confident",
+      "act_any": [
+        "requirement",
+        "decision",
+        "commitment"
+      ],
+      "note": "Rule 4 still outranks rule 14: 'we' is 'group', never a resolved individual. Included so that adding pronoun resolution cannot quietly start assigning group work to whoever was named last."
+    }
+  ],
+  "must_not_extract_spans": [],
+  "must_not_extract": [
+    "a task owned by 'he', 'she' or 'they' - a pronoun is not a name and is discarded downstream, which loses the owner entirely",
+    "an item owned by Ravi or Pulkit for the vendor contract, where the speaker said they could not tell which",
+    "nothing at all for an ambiguous pronoun: an unresolvable owner must not remove the item"
+  ],
+  "tolerated_spurious": [
+    "vendor contract",
+    "compliance"
+  ],
+  "decision_note": "The two directions are deliberately adjacent in one transcript, because a prompt can pass either alone by being uniformly eager or uniformly cautious; passing both requires the model to actually count candidates. Two corrections came out of the first live run. (1) The model dropped 'He said he would look at it this week' entirely rather than keeping it with owner 'unknown' - a silent recall failure, since somebody did commit to reviewing the contract. Rule 14 now says in terms that an unresolvable pronoun removes the owner, never the item. (2) This case originally forbade 'she mentioned the deadline moved', which contradicted the decision-act rule about changed plans; the label was wrong, not the model. If this case fails on the Ravi/Pulkit item while the first item passes, rule 14 has become too eager and the bar should be raised back to certainty rather than the examples being expanded."
+}

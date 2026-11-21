@@ -1,0 +1,74 @@
+{
+  "id": "personal_schedule",
+  "description": "Someone listing their own day out loud. Captured from a real device recording, where an over-strict small-talk rule caused every one of these to be dropped.",
+  "tz": "Asia/Kolkata",
+  "recorded_at": "2026-11-19T20:09:00+05:30",
+  "transcript": "So I have one meeting tomorrow at 5. I have one interview at 6 pm. I'll play football at 7.15. And I'll also meet my previous teacher tomorrow. My friend has his birthday the day after tomorrow. Also I have to send a WhatsApp to Priya.",
+  "expected_participants": [
+    "Priya"
+  ],
+  "expected_items": [
+    {
+      "quote": "So I have one meeting tomorrow at 5.",
+      "owner": "unknown",
+      "due_date": "2026-11-20",
+      "due_resolution": "confident",
+      "note": "A personal appointment is still something to be at. 'I have a meeting' states a fact about the schedule rather than taking work on, so requirement is right. Label corrected: 'I have (to)' names the speaker as owner, so commitment fits the stated rule as well as requirement.",
+      "act_any": [
+        "requirement",
+        "commitment"
+      ]
+    },
+    {
+      "quote": "I have one interview at 6 pm.",
+      "owner": "unknown",
+      "due_resolution": "ambiguous",
+      "note": "A time with no day. Must not be guessed into a date. Label corrected: 'I have (to)' names the speaker as owner, so commitment fits the stated rule as well as requirement.",
+      "act_any": [
+        "requirement",
+        "commitment"
+      ]
+    },
+    {
+      "quote": "I'll play football at 7.15.",
+      "act": "commitment",
+      "owner": "unknown",
+      "due_resolution": "none",
+      "note": "'I'll' is a commitment by the speaker even though it is leisure. '7.15' is not parsed as a time - known gap in core/dates.py, which handles '7.15 pm' but not a bare '7.15'. No deadline is invented, which is the safe failure."
+    },
+    {
+      "quote": "I'll also meet my previous teacher tomorrow.",
+      "act": "commitment",
+      "owner": "unknown",
+      "due_date": "2026-11-20",
+      "due_resolution": "confident",
+      "note": "Personal, but a commitment with a resolvable date."
+    },
+    {
+      "quote": "Also I have to send a WhatsApp to Priya.",
+      "owner": "unknown",
+      "due_resolution": "none",
+      "note": "'I have to' is a requirement. No deadline was given, and none should be invented. Label corrected: 'I have (to)' names the speaker as owner, so commitment fits the stated rule as well as requirement.",
+      "act_any": [
+        "requirement",
+        "commitment"
+      ]
+    },
+    {
+      "quote": "My friend has his birthday the day after tomorrow.",
+      "act_any": [
+        "discussion",
+        "commitment",
+        "requirement",
+        "decision"
+      ],
+      "owner": "unknown",
+      "due_date": "2026-11-21",
+      "due_resolution": "confident",
+      "note": "A date to remember rather than a task. Which act it lands on is not important; capturing the date is."
+    }
+  ],
+  "must_not_extract": [
+    "nothing at all - the earlier prompt dropped this entire conversation as small talk"
+  ]
+}

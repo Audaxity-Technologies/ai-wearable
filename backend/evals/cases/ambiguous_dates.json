@@ -1,0 +1,42 @@
+{
+  "id": "ambiguous_dates",
+  "description": "Vague deadlines. Every one must surface as needing clarification rather than being guessed.",
+  "tz": "Asia/Kolkata",
+  "recorded_at": "2026-11-19T09:00:00+05:30",
+  "transcript": "Sameer: I'll send the contract over sometime next week.\nDivya: Can you also review the designs by next Friday?\nSameer: Sure. And we need to finalise the budget soon.\nDivya: I'll book the venue the day after tomorrow.",
+  "expected_participants": ["Sameer", "Divya"],
+  "expected_items": [
+    {
+      "quote": "I'll send the contract over sometime next week.",
+      "act": "commitment",
+      "owner": "Sameer",
+      "due_resolution": "ambiguous",
+      "note": "'sometime next week' has no specific date."
+    },
+    {
+      "quote": "Can you also review the designs by next Friday?",
+      "act": "assignment",
+      "owner": "Sameer",
+      "due_resolution": "ambiguous",
+      "note": "'next Friday' is ambiguous in English - this coming one, or the one after."
+    },
+    {
+      "quote": "we need to finalise the budget soon",
+      "act": "requirement",
+      "owner": "group",
+      "due_resolution": "ambiguous",
+      "note": "'soon' is not a date."
+    },
+    {
+      "quote": "I'll book the venue the day after tomorrow.",
+      "act": "commitment",
+      "owner": "Divya",
+      "due_date": "2026-11-21",
+      "due_resolution": "confident",
+      "note": "This one IS unambiguous - the control case."
+    }
+  ],
+  "must_not_extract": [
+    "a specific calendar date for 'next week', 'next Friday' or 'soon'"
+  ]
+}

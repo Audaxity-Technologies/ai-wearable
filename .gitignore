@@ -1,0 +1,73 @@
+# --- Secrets -----------------------------------------------------------
+# `.env` holds the Groq key, the JWT signing secret and the Google OAuth
+# client secret. `.env.example` is the committed template.
+.env
+.env.*
+!.env.example
+*.pem
+*.p8
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# --- Recorded data: NEVER commit this --------------------------------
+# These directories hold real recordings of real conversations, the
+# transcripts made from them, the coarse places they happened, and the
+# account row with its password hash. They are the most sensitive bytes in
+# the project and nothing about them belongs in a repository.
+#
+# `DATA_DIR` defaults to ./data; data_phone/ and data_device/ are the
+# device-testing stores.
+backend/data/
+backend/data_*/
+*.m4a
+*.wav
+*.mp3
+*.ogg
+
+# --- Dependencies ------------------------------------------------------
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Vendored binaries -------------------------------------------------
+# tools/cloudflared.exe is a 55MB upstream release. Fetch it with the
+# command in scripts/tunnel.ps1 rather than carrying it in git history.
+tools/
+
+# --- Build output ------------------------------------------------------
+dist/
+build/
+mobile/.expo/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/.cxx/
+mobile/android/local.properties
+.gradle/
+
+# --- The app's own scaffold repo ---------------------------------------
+# `create-expo-app` runs `git init` inside mobile/, which made git treat the
+# whole app as an embedded repository and stage it as a single gitlink - so
+# none of the app's files would have been pushed. Renamed rather than
+# deleted; it held one scaffold commit and no remote, and is safe to remove.
+mobile/.git-disabled/
+
+# --- Local development -------------------------------------------------
+.jdks/
+.npm-cache/
+.npm-tmp/
+.vscode/
+*.log
+
+# --- OS ----------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini

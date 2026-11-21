@@ -1,0 +1,41 @@
+{
+  "id": "changed_deadline",
+  "description": "A previously agreed deadline and owner change. These must be extracted as decisions carrying the NEW value, so memory can raise a conflict against the stored one.",
+  "tz": "Asia/Kolkata",
+  "recorded_at": "2026-11-19T11:00:00+05:30",
+  "transcript": "Anita: Quick update on the launch plan.\nRohit: Go ahead.\nAnita: The investor pitch is now due the day after tomorrow, not Friday.\nRohit: Understood. And Priya is taking over the compliance forms instead of me.\nAnita: Right. I'll update the tracker today.",
+  "expected_participants": [
+    "Anita",
+    "Rohit",
+    "Priya"
+  ],
+  "expected_items": [
+    {
+      "quote": "The investor pitch is now due the day after tomorrow, not Friday.",
+      "act": "decision",
+      "owner": "unknown",
+      "due_date": "2026-11-21",
+      "due_resolution": "confident",
+      "note": "A changed deadline is a decision, not discussion. due_raw must be the NEW date. Owner is 'unknown': the sentence names nobody and contains no 'we'/'let's', so per the OWNER RULE inventing 'group' would be wrong."
+    },
+    {
+      "quote": "Priya is taking over the compliance forms instead of me.",
+      "act": "decision",
+      "owner": "Priya",
+      "due_resolution": "none",
+      "note": "A changed owner is also a decision. Memory should conflict this against any stored owner."
+    },
+    {
+      "quote": "I'll update the tracker today.",
+      "act": "commitment",
+      "owner": "Anita",
+      "due_date": "2026-11-19",
+      "due_resolution": "confident",
+      "note": "Control case: an ordinary commitment in the same conversation."
+    }
+  ],
+  "must_not_extract": [
+    "the OLD Friday deadline as if it were still current",
+    "anything classified as 'discussion' - a change is a decision"
+  ]
+}

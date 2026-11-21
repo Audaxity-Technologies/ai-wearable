@@ -1,0 +1,12 @@
+# Normalise to LF in the repository; check out native on Windows.
+* text=auto
+
+# Always LF: shell scripts break with CRLF, and these are read on Linux.
+*.sh text eol=lf
+*.py text eol=lf
+
+# Never touched.
+*.png binary
+*.jpg binary
+*.m4a binary
+*.exe binary

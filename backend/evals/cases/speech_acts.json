@@ -1,0 +1,62 @@
+{
+  "id": "speech_acts",
+  "description": "The same action phrased four ways. This is the product's core distinction, isolated.",
+  "tz": "Asia/Kolkata",
+  "recorded_at": "2026-11-19T10:00:00+05:30",
+  "transcript": "Ravi: I'll send the report tomorrow.\nPriya: Also, you should send the invoice to the client.\nRavi: Maybe we should send a follow-up email as well.\nPriya: And we need to send the compliance forms before the audit.\nRavi: Should we send the deck too?\nPriya: Let's not decide that now.",
+  "expected_participants": [
+    "Ravi",
+    "Priya"
+  ],
+  "expected_items": [
+    {
+      "quote": "I'll send the report tomorrow.",
+      "act": "commitment",
+      "owner": "Ravi",
+      "due_date": "2026-11-20",
+      "due_resolution": "confident",
+      "note": "Speaker took it on themselves."
+    },
+    {
+      "quote": "you should send the invoice to the client",
+      "act": "assignment",
+      "owner": "Ravi",
+      "due_resolution": "none",
+      "note": "Priya directs Ravi. Owner is the addressee, not the speaker."
+    },
+    {
+      "quote": "Maybe we should send a follow-up email as well.",
+      "act": "suggestion",
+      "owner": "group",
+      "due_resolution": "none",
+      "note": "Hedged. Must NOT become a task."
+    },
+    {
+      "quote": "we need to send the compliance forms before the audit",
+      "act": "requirement",
+      "owner": "group",
+      "due_resolution": "none",
+      "note": "'before the audit' is not a date. Must not be invented into one."
+    },
+    {
+      "quote": "Should we send the deck too?",
+      "act": "question",
+      "owner": "group",
+      "due_resolution": "none",
+      "note": "Raised and explicitly put off, so it is still unresolved. Product decision: a deferred question resurfaces, because people forget what they postponed."
+    },
+    {
+      "quote": "Let's not decide that now.",
+      "act_any": [
+        "decision",
+        "suggestion"
+      ],
+      "owner": "group",
+      "due_resolution": "none",
+      "note": "The postponement itself is worth recording alongside the open question."
+    }
+  ],
+  "must_not_extract": [
+    "a task assigning the deck to anyone - it was never agreed, only deferred"
+  ]
+}

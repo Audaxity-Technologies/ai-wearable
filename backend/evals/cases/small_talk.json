@@ -1,0 +1,21 @@
+{
+  "id": "small_talk",
+  "description": "No real commitments. Tests over-extraction, the most common way these systems become annoying. One borderline extraction is accepted here: see tolerated_spurious.",
+  "tz": "Asia/Kolkata",
+  "recorded_at": "2026-11-19T13:00:00+05:30",
+  "transcript": "Arjun: The coffee at the new place near the office is really good.\nNeha: I went there on Sunday. It was packed.\nArjun: Did you watch the match last night?\nNeha: Only the last twenty minutes. That second goal was unbelievable.\nArjun: My brother is visiting next month, so I might take him there.\nNeha: You should. The weather has been nice lately too.",
+  "expected_participants": [
+    "Arjun",
+    "Neha"
+  ],
+  "expected_items": [],
+  "must_not_extract": [
+    "a task to visit the coffee place",
+    "a reminder about the brother's visit next month",
+    "anything from the football or the weather"
+  ],
+  "tolerated_spurious": [
+    "take him there"
+  ],
+  "decision_note": "'My brother is visiting next month, so I might take him there.' / 'You should.' sits on the line between chat and a soft plan. Capturing it is the accepted cost of the rule that also captures personal commitments like 'I have a meeting tomorrow at 5' - see the personal_schedule case, which was built from a real recording that the stricter rule discarded entirely. A missed commitment costs the user more than a card they can dismiss. Anything beyond this item still fails the case."
+}

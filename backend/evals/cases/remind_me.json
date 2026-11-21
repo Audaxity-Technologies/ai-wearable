@@ -1,0 +1,61 @@
+{
+  "id": "remind_me",
+  "description": "A real device recording in which the user states two dated events and then asks to be reminded. The first run split each one into a dated non-actionable 'discussion' plus an undated 'assignment' titled 'remind me', producing approval cards with no dates on them. Transcript is verbatim from Whisper, including its missing sentence punctuation.",
+  "tz": "Asia/Kolkata",
+  "recorded_at": "2026-11-20T23:02:58+05:30",
+  "transcript": "I'm going to go, let's go I'm going to go I'm going to go Hello So I have my interview scheduled for tomorrow 6pm Also I have my friend's birthday So remind me What are you doing? Yeah, interview bro Why are you giving an interview? Why can't I give? You have a company in the city I'm happy man You can hire interns I've been hire interns Also day after tomorrow I have my exam So remind me of that",
+  "expected_participants": [],
+  "expected_items": [
+    {
+      "quote": "interview scheduled for tomorrow 6pm",
+      "owner": "unknown",
+      "due_date": "2026-11-21",
+      "due_time": "18:00",
+      "due_resolution": "confident",
+      "act_any": [
+        "commitment",
+        "requirement"
+      ],
+      "note": "The whole point of the case. The event and its time must be ONE actionable item carrying the date. 'discussion' here is a failure even though the date resolves correctly, because only actionable acts reach the approval inbox."
+    },
+    {
+      "quote": "day after tomorrow I have my exam",
+      "owner": "unknown",
+      "due_date": "2026-11-22",
+      "due_resolution": "confident",
+      "act_any": [
+        "commitment",
+        "requirement"
+      ],
+      "note": "Same shape as the interview, with the time phrase leading the sentence instead of trailing it."
+    },
+    {
+      "quote": "friend's birthday",
+      "owner": "unknown",
+      "due_resolution": "none",
+      "act_any": [
+        "discussion",
+        "commitment",
+        "requirement",
+        "decision"
+      ],
+      "note": "No date was ever spoken for the birthday - 'Also I have my friend's birthday' and nothing more. Resolution must be 'none': inheriting 'tomorrow' from the previous sentence would be an invented date, which is the worse failure. Which act it lands on does not matter."
+    }
+  ],
+  "tolerated_spurious": [
+    "I'm going to go",
+    "let's go",
+    "You can hire interns",
+    "I've been hire interns",
+    "Why are you giving an interview"
+  ],
+  "decision_note": "The tolerated_spurious list covers the garbled opening ('I'm going to go' repeated while the phone was being handed over) and the banter about hiring interns. These are cheap to dismiss. The must_not_extract_spans list is the real assertion (it is the machine-checked key; plain must_not_extract is prose for a reader): a 'remind me' fragment must never become an item of its own.",
+  "must_not_extract_spans": [
+    "So remind me",
+    "So remind me of that",
+    "remind me of that"
+  ],
+  "must_not_extract": [
+    "a 'remind me' fragment as an item of its own, with no date"
+  ]
+}
