@@ -25,6 +25,7 @@ from app.api.v1 import (
     integrations,
     memory,
     people,
+    questions,
     sessions,
     tasks,
     utterances,
@@ -141,6 +142,7 @@ def create_app(
     app.include_router(voice.router, prefix="/v1")
     app.include_router(people.router, prefix="/v1")
     app.include_router(utterances.router, prefix="/v1")
+    app.include_router(questions.router, prefix="/v1")
     return app
 
 

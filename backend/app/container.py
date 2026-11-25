@@ -38,6 +38,7 @@ from app.services.retrieval import RetrievalService
 from app.services.pipeline import PipelineService
 from app.services.sessions import SessionService
 from app.services.people import PersonService
+from app.services.questions import QuestionParser
 from app.services.tasks import TaskService
 from app.services.utterances import UtteranceService
 from app.services.voice.enrolment import VoiceService
@@ -77,6 +78,7 @@ class Container:
     voice_service: VoiceService
     person_service: PersonService
     utterance_service: UtteranceService
+    question_parser: QuestionParser
     briefing_service: BriefingService
     push: ExpoPushDriver | NullPushDriver
     pipeline: PipelineService
@@ -138,6 +140,9 @@ def build_container(
     memory_service = MemoryService(memories=memories_repo)
     person_service = PersonService(people=people_repo)
     utterance_service = UtteranceService(utterances=utterances_repo)
+    question_parser = QuestionParser(
+        people=person_service, utterances=utterance_service
+    )
     task_service = TaskService(tasks=tasks_repo, people=person_service)
     action_engine = ActionEngine(actions=actions_repo)
     voice_service = VoiceService(
@@ -247,6 +252,7 @@ def build_container(
         voice_service=voice_service,
         person_service=person_service,
         utterance_service=utterance_service,
+        question_parser=question_parser,
         briefing_service=briefing_service,
         push=push_driver,
         pipeline=pipeline,

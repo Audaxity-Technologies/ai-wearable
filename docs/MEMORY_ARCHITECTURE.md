@@ -282,7 +282,7 @@ Worth knowing before you promise it to anyone:
 | **A** | `coarse_place` on `Segment` + `Session` | unbackfillable; do it first | **done 2026-11-21** |
 | **B** | `Person` entity, aliases, merge UI | unblocks everything | **done 2026-11-21** |
 | **C** | L1 utterance index (+ speaker, place, absolute time) | the missing grain | **done 2026-11-25** |
-| **D** | Question parser: classify + resolve + **clarify** | the product | 5–6 d |
+| **D** | Question parser: classify + resolve + **clarify** | the product | **done 2026-11-25** |
 | **E** | Bi-temporal edges; `conflicts_with` → invalidation | the differentiator | 4–5 d |
 | **F** | Embeddings as a ranker *inside* the filter | last, deliberately | 2–3 d |
 | **G** | Retrieval eval set (question → expected citations) | **alongside D, not after** | ongoing |
@@ -445,6 +445,57 @@ Verified against real recordings: `place=academic` + `act=commitment`
 + a five-minute window returns the three sentences actually spoken at that
 place, out of 26 indexed. The session-grained retrieval could not express
 that query at all.
+
+## Phase D as built (2026-11-25)
+
+Question in, filter out. `POST /v1/questions/parse` returns the plan without
+running it, which is how a wrong answer gets debugged: you read the filter
+rather than guessing at the result.
+
+**Deterministic, and that is the choice.** No LLM call: classification is
+keyword rules, time comes from `core/when.py`, names from PersonService's
+alias matching, places from the places actually present in the index. A
+rule-based parser fails *visibly* - it says when it does not understand, and
+when it does you can read which filter ran. An LLM classifier would handle
+more phrasings and would occasionally resolve "what did Priya say" into a
+filter on Prithvi with nothing in the output to show it had. The honest
+limit: unrecognised phrasings return `UNKNOWN`. Phase G's eval set is the
+evidence for adding an LLM pass *behind* the rules, measured against them.
+
+**`core/when.py` is the mirror of `core/dates.py`, not a reuse of it.**
+`resolve_due` faces forward - it resolves deadlines, so bare "Friday" is the
+coming Friday. A question faces backward, so "what did we decide on Friday"
+asked on a Wednesday means the Friday five days ago. Resolving it forward
+returns nothing while looking like a broken index. It also returns *ranges*
+rather than dates, because a question is never about an instant, and pushing
+the start/end arithmetic onto callers is how one of them gets it subtly wrong.
+
+**Three refusals, each a case where rows would be worse than none:**
+
+- *needs clarification* - "that day" with no anchor asks which day. A guessed
+  range returns real sentences from the wrong moment, which reads as an
+  answer rather than a mistake.
+- *not understood* - better than silently matching on stopwords.
+- *no constraints* - an unconstrained filter returns the entire history
+  dressed as a reply.
+
+And when the filter simply matches nothing, the verdict **names the filter**
+("Nothing recorded matches decision; about budget"), so the user can tell a
+badly-phrased question from an empty history.
+
+**A bug worth recording, because it is the third of its family.** The
+multi-word name scan matched "what did pulkit" against a person called
+Pulkit, because `Person.matches` treats token containment as a match in
+either direction - so any phrase *containing* a name resolved, and the
+clarification read "Which what did pulkit do you mean?". Fixed by skipping
+spans that contain question stopwords: a name contains no scaffolding. Same
+shape as the utterance linker tagging a four-character span, and as despacing
+failing to fix "Pull kit" - permissive matching looks fine in a unit test and
+produces nonsense on real input.
+
+Verified against real recordings: "what did we talk about at the academic
+block" returns the five sentences actually spoken there; "what did I commit
+to on Saturday" resolves Saturday backward to the 21st; "that day" asks.
 
 ## What I'd push back on
 

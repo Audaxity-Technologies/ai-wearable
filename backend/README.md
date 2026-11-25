@@ -656,3 +656,22 @@ implies; phase F adds embeddings as a ranker inside a filtered set.
 `speaker_person_id` is always `None` for now — `owner` is who took the work
 on, not who spoke, so filling one from the other would attribute speech to
 whoever was named.
+
+## Questions (memory phase D)
+
+| Route | What it does |
+|---|---|
+| `POST /v1/questions/parse` | Returns the filter a question resolves to, **without running it** |
+| `POST /v1/questions` | Resolves and returns the matching utterances, with a verdict |
+
+Deterministic — no LLM call. Classification is keyword rules, time comes from
+`core/when.py`, names from the people index, places from places actually
+recorded. Unrecognised phrasings return `kind: unknown` rather than a guess.
+
+`core/when.py` is the mirror of `core/dates.py`, not a reuse: `resolve_due`
+faces **forward** (bare "Friday" is the coming Friday, correct for a
+deadline), while a question faces **backward**. It returns ranges, not dates.
+
+Every response carries a `verdict`, including the refusals: needs
+clarification, not understood, would search everything, or matched nothing.
+An empty `utterances` list is never silently empty.

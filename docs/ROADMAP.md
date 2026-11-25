@@ -112,7 +112,7 @@ session-grained index either returns the whole thing or scores it below a
 session that merely says "Pulkit" five times. Place and speaker also change
 mid-session, so the utterance is the only grain where they mean anything.
 
-### 1b. Phase D — the question parser — 5–6 days
+### 1b. Phase D — the question parser — DONE 2026-11-25
 
 **The single highest-value piece of work left in this project.**
 
