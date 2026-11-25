@@ -17,14 +17,17 @@ import type {
   HealthResponse,
   IngestAccepted,
   MemoryKind,
+  MemoryChange,
   MemoryResponse,
   OpenLoopLedger,
+  QuestionAnswer,
   PeopleList,
   PersonSummary,
   SessionSummary,
   TaskResponse,
   TaskStatus,
   TranscriptResponse,
+  UtteranceList,
   VoiceStatus,
 } from './types';
 
@@ -409,6 +412,48 @@ export class AudaxityApi {
    * job is to report our own failures while things are going wrong. */
   getReceipt = (sessionId: string) =>
     this.request<CaptureReceipt>(`/sessions/${sessionId}/receipt`);
+
+  // --- utterances (phase C) ---
+  utterancesForSession = (sessionId: string) =>
+    this.request<UtteranceList>(`/utterances/by-session/${sessionId}`);
+
+  // --- questions (phase D) ---
+  /** Returns the resolved filter AND the evidence. The `verdict` is never
+   * silently empty: it says which refusal applied, or that nothing matched. */
+  askQuestion = (text: string, limit = 20) =>
+    this.request<QuestionAnswer>(
+      '/questions',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      },
+      { limit },
+    );
+
+  // --- bi-temporal memory (phase E) ---
+  memoryChanges = () => this.request<MemoryChange[]>('/memory/changes');
+
+  memoryHistory = (key: string) =>
+    this.request<{ memories: MemoryResponse[]; total: number }>(
+      '/memory/history',
+      {},
+      { key },
+    );
+
+  // --- participants ---
+  addParticipant = (sessionId: string, name: string) =>
+    this.request<SessionSummary>(`/sessions/${sessionId}/participants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+
+  removeParticipant = (sessionId: string, personId: string) =>
+    this.request<SessionSummary>(
+      `/sessions/${sessionId}/participants/${personId}`,
+      { method: 'DELETE' },
+    );
 
   // --- people ---
   listPeople = () => this.request<PeopleList>('/people');

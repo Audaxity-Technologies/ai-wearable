@@ -14,6 +14,7 @@ import {
   useDeleteSession,
   useReceipt,
   useSession,
+  useSessionUtterances,
   useTranscript,
 } from '@/api/hooks';
 import {
@@ -29,7 +30,9 @@ import {
   Screen,
 } from '@/ui/components';
 import { placeName } from '@/api/types';
+import { ParticipantsCard } from '@/ui/ParticipantsCard';
 import { ReceiptCard } from '@/ui/ReceiptCard';
+import { UtteranceTimeline } from '@/ui/UtteranceTimeline';
 import {
   colors,
   formatDate,
@@ -49,6 +52,7 @@ export default function ConversationScreen() {
   const analysis = useAnalysis(sessionId, session.data?.status);
   const transcript = useTranscript(sessionId);
   const receipt = useReceipt(sessionId);
+  const utterances = useSessionUtterances(sessionId);
   const remove = useDeleteSession();
   const [showTranscript, setShowTranscript] = useState(false);
 
@@ -131,6 +135,11 @@ export default function ConversationScreen() {
             </Text>
           ) : null}
         </Card>
+
+        <ParticipantsCard
+          sessionId={sessionId}
+          participants={data.participants ?? []}
+        />
 
         {/* Placed above the summary deliberately: whether to believe the
             analysis is prior to reading it. */}
@@ -245,6 +254,10 @@ export default function ConversationScreen() {
           Removes the audio, transcript, and memories only this conversation
           supports.
         </Text>
+        {utterances.data ? (
+          <UtteranceTimeline utterances={utterances.data.utterances} />
+        ) : null}
+
       </ScrollView>
     </Screen>
   );

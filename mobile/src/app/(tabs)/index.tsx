@@ -204,6 +204,25 @@ export default function RecordScreen() {
           </Card>
         ) : null}
 
+        {/* The flagship, given a card rather than a link in a row of
+            secondary buttons. Everything else here is about capture; this is
+            the only entry point to what the capture was for. */}
+        {!recording ? (
+          <Card>
+            <Text style={type.heading}>Recall</Text>
+            <Text style={[type.dim, { marginTop: space.xs }]}>
+              Ask about anything you recorded — a day, a place, a person, or
+              what was decided. You see exactly what was searched for, and the
+              sentences themselves.
+            </Text>
+            <Button
+              title="Ask something"
+              onPress={() => router.push('/recall')}
+              style={{ marginTop: space.md }}
+            />
+          </Card>
+        ) : null}
+
         {lastSession && !recording ? (
           <Card>
             <Text style={type.heading}>Processing your conversation</Text>
@@ -267,6 +286,13 @@ export default function RecordScreen() {
             </Link>
             <Link href="/people" asChild>
               <Button title="People" variant="secondary" onPress={() => {}} />
+            </Link>
+            <Link href="/changes" asChild>
+              <Button
+                title="What changed"
+                variant="secondary"
+                onPress={() => {}}
+              />
             </Link>
           </Row>
         </Card>

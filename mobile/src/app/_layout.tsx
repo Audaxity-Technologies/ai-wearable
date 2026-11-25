@@ -104,6 +104,11 @@ export default function RootLayout() {
               options={{ title: 'Open loops' }}
             />
             <Stack.Screen name="people" options={{ title: 'People' }} />
+            <Stack.Screen name="recall" options={{ title: 'Recall' }} />
+            <Stack.Screen
+              name="changes"
+              options={{ title: 'What keeps changing' }}
+            />
           </Stack.Protected>
 
           <Stack.Protected guard={!signedIn}>

@@ -145,6 +145,76 @@ export function useOpenLoops() {
   });
 }
 
+export function useSessionUtterances(sessionId: string) {
+  const api = useApi();
+  return useQuery({
+    queryKey: ['utterances', sessionId],
+    queryFn: () => api!.utterancesForSession(sessionId),
+    enabled: !!api && !!sessionId,
+  });
+}
+
+/**
+ * Asking is a mutation, not a query.
+ *
+ * Deliberate: a question is a thing the user does once, and caching it by
+ * text would re-show a stale answer for a question whose evidence has since
+ * changed.
+ */
+export function useAskQuestion() {
+  const api = useApi();
+  return useMutation({
+    mutationFn: (text: string) => api!.askQuestion(text),
+  });
+}
+
+export function useMemoryChanges() {
+  const api = useApi();
+  return useQuery({
+    queryKey: ['memory-changes'],
+    queryFn: () => api!.memoryChanges(),
+    enabled: !!api,
+  });
+}
+
+export function useMemoryHistory(key: string | null) {
+  const api = useApi();
+  return useQuery({
+    queryKey: ['memory-history', key],
+    queryFn: () => api!.memoryHistory(key!),
+    enabled: !!api && !!key,
+  });
+}
+
+export function useAddParticipant(sessionId: string) {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => api!.addParticipant(sessionId, name),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['session', sessionId] });
+      // Labelling changes who questions can narrow to, and can fill in a
+      // task's owner, so both are refetched.
+      void queryClient.invalidateQueries({ queryKey: ['people'] });
+      void queryClient.invalidateQueries({ queryKey: ['open-loops'] });
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+}
+
+export function useRemoveParticipant(sessionId: string) {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (personId: string) =>
+      api!.removeParticipant(sessionId, personId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['session', sessionId] });
+      void queryClient.invalidateQueries({ queryKey: ['people'] });
+    },
+  });
+}
+
 export function usePeople() {
   const api = useApi();
   return useQuery({

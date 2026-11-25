@@ -45,6 +45,8 @@ export interface SessionSummary {
   error?: string | null;
   /** Where it happened, busiest first. Empty when capture is off. */
   places?: SessionPlace[];
+  /** Who the user said was here. Presence, not authorship. */
+  participants?: Participation[];
 }
 
 export interface TranscriptSpan {
@@ -113,6 +115,13 @@ export interface AnalysisResponse {
 export type MemoryKind = 'person' | 'project' | 'fact' | 'preference';
 
 export interface MemoryResponse {
+  /** Bi-temporal validity (phase E). `is_current` is the one that
+   * matters: whether this is the version still believed. */
+  observed_at?: string | null;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  superseded_by?: string | null;
+  is_current?: boolean;
   id: string;
   kind: MemoryKind;
   name: string;
@@ -406,4 +415,106 @@ export interface MergeSuggestion {
 export interface PeopleList {
   people: PersonSummary[];
   suggestions: MergeSuggestion[];
+}
+
+// --- utterances (memory phase C) ---
+
+export interface UtteranceRow {
+  id: string;
+  session_id: string;
+  segment_id: string;
+  seq: number;
+  text: string;
+  started_at: string;
+  ended_at: string;
+  offset_start_s: number;
+  offset_end_s: number;
+  duration_s: number;
+  /** A name, never coordinates. */
+  place_name: string | null;
+  speaker_person_id: string | null;
+  act: SpeechAct | null;
+  item_owner: string | null;
+  item_title: string | null;
+  project: string | null;
+}
+
+export interface UtteranceList {
+  utterances: UtteranceRow[];
+  total: number;
+}
+
+// --- questions (memory phase D) ---
+
+export type QuestionKind =
+  | 'point_lookup'
+  | 'temporal'
+  | 'relationship'
+  | 'aggregation'
+  | 'existence'
+  | 'unknown';
+
+export interface ClarificationOption {
+  value: string;
+  label: string;
+  detail: string;
+}
+
+/**
+ * What could not be resolved, and the choices.
+ *
+ * Showing this is the point: "which Pulkit do you mean?" is a better answer
+ * than a confident wrong one, and a guessed constraint returns real sentences
+ * from the wrong moment — which reads as an answer rather than a mistake.
+ */
+export interface Clarification {
+  kind: 'person' | 'time' | 'place';
+  question: string;
+  phrase: string;
+  options: ClarificationOption[];
+}
+
+export interface ResolvedQuestion {
+  text: string;
+  kind: QuestionKind;
+  person_ids: string[];
+  person_names: string[];
+  about_self: boolean;
+  time_range: { start: string; end: string; label: string } | null;
+  time_phrase: string | null;
+  place: string | null;
+  acts: SpeechAct[];
+  actionable_only: boolean;
+  terms: string[];
+  clarifications: Clarification[];
+}
+
+export interface QuestionAnswer {
+  resolved: ResolvedQuestion;
+  total: number;
+  utterances: UtteranceRow[];
+  /** Never silently empty: says which refusal or that nothing matched. */
+  verdict: string;
+}
+
+// --- bi-temporal memory (phase E) ---
+
+export interface MemoryChange {
+  key: string;
+  name: string;
+  change_count: number;
+  current: MemoryResponse | null;
+}
+
+// --- participants ---
+
+export type ParticipationRole = 'spoke' | 'mentioned' | 'self';
+
+export interface Participation {
+  person_id: string;
+  name: string;
+  role: ParticipationRole;
+  /** "user" when the user said so — the only certain evidence. */
+  source: string;
+  added_at: string;
 }
