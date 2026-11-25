@@ -223,3 +223,124 @@ for us than for anyone else on this list.
 - [Sacra: Why Meta bought Limitless](https://sacra.com/research/why-meta-bought-limitless/) · [Neowin: Meta acquires Limitless, ending Pendant sales](https://www.neowin.net/news/meta-acquires-ai-startup-limitless-ending-sales-of-its-popular-pendant-wearable)
 - [AI wearables and the bystander consent gap](https://thesignal.in/technology/2026/09/17/ai-wearable-bystander-consent-gap-2026) · [Is your AI wearable allowed to record others?](https://memx.app/blog/ai-wearable-recording-consent-law/) · [EFF on AI wearables and privacy](https://ai-tldr.dev/releases/eff-ai-wearables-shift-privacy/)
 - [What is a wearable AI recorder](https://vibe.us/blog/what-is-wearable-ai-recorder/)
+
+---
+
+# Addendum, 2026-11-26: Neo Sapien, and what is actually left
+
+Researched after the user named [neosapien.ai](https://neosapien.ai/), which
+had not been in the original set. It should have been: **it is the closest
+competitor this product has, and it is Indian.**
+
+## Neo Sapien Neo 1 — the competitor that matters
+
+| | |
+|---|---|
+| Price | **Rs 12,999** (MRP Rs 15,999), **no recurring subscription** |
+| Hardware | 20g pendant, metal chain, 16h battery, Bluetooth to phone, not water-resistant |
+| Shipping | India only; US via Amazon. Dispatched in 2-3 days |
+| Claim | "Meet world's best multi-lingual AI notetaker" |
+
+**What they ship that we do not:**
+
+1. **An MCP connector.** "Bring Neo 1 Memories to Any AI... Use everything
+   Neo 1 remembers inside ChatGPT, Claude and more." That is
+   [FEATURE_PROPOSALS.md](FEATURE_PROPOSALS.md) Tier 2 item 8, shipped.
+2. **Desktop capture for online meetings, no bots.** "Dedicated desktop app
+   to capture all online meetings. No bots." Zoom, Meet, Teams, WhatsApp.
+   That is our Tier 3 item, shipped.
+3. **Owner voice fingerprinting.** "Neo 1 recognizes your voice, providing
+   accurate and personal responses." That is roadmap 0a - **and it is the
+   same design we chose**: the owner only, not everybody. Independent
+   convergence on that call is reassuring.
+4. **140+ languages, Hinglish explicitly.** Our Tier 3 multi-language item.
+5. **Projects**, a daily/weekly plan summary, and a pre-meeting briefing.
+6. **Offline capture** on the device, processed when the phone reconnects.
+
+That is four roadmap items already in a shipping product at Rs 12,999 with no
+subscription. Anyone planning to monetise MCP access, desktop capture or
+language coverage should know those are now table stakes in this market
+rather than differentiators.
+
+**What they do not do, from their own pages:**
+
+1. **Who said what.** The only speaker claim is recognising *the owner's*
+   voice. Diarisation is not mentioned anywhere. Their own comparison blog
+   poses "can it still identify who said what?" as a question for buyers and
+   **does not answer it for themselves**.
+2. **No speech acts.** "To-dos that write themselves" and "extracts to-dos,
+   commitments, and follow-ups" - a flat list. Nothing distinguishes a
+   commitment from a suggestion from a decision, so nothing can answer "what
+   did we decide and then un-decide".
+3. **No change tracking.** "Infinite memory... Neo 1 remembers everything"
+   is a storage claim. Nothing about what was true *then*.
+4. **No capture integrity.** Their stated limitation is "requires wearing
+   consistently to build value over time" - the problem named, with nothing
+   offered for it.
+5. **No consent feature.** Only advice: "Always ensure you have appropriate
+   consent from participants before recording."
+6. **Unnamed certification.** "audited by 3rd party security agencies to
+   ensure that all information is 100% secure and private" names no agency,
+   no standard, no report. "100% secure" is not a claim a security auditor
+   would sign.
+
+## The one place they are ahead of us on principle
+
+**They delete the audio.** "Neo 1 only uses the audio file to transcribe
+information. It does not store any audio recordings." "Audio files are not
+stored once processed."
+
+That is a genuinely stronger privacy posture than ours, and it should be said
+plainly rather than spun. It also costs them something we decided to keep:
+**re-transcription**. We can fix "Pull kit" retroactively, re-run a better
+model over last March, and rebuild the whole utterance index from source.
+They cannot - their index is as good as the model that was running the day
+you spoke.
+
+That is a real trade with a real cost on each side. Ours is defensible only
+if the retention window is the user's choice and plainly stated, which is why
+[SCALING_AND_HOSTING.md](SCALING_AND_HOSTING.md) puts it in the user's hands.
+
+## The wider set, as of late 2026
+
+| Product | Owner | Price | Note |
+|---|---|---|---|
+| **Neo Sapien Neo 1** | independent, India | Rs 12,999 | closest competitor; no subscription |
+| **Bee** | **Amazon** | $49.99-$74.99 | US addresses only |
+| **Limitless** | **Meta** | discontinued | pendant sales ended 5 Dec 2025 |
+| **Omi** | independent | $89-$179 | open source |
+| **PLAUD NotePin** | independent | ~$179 | deliberate press-to-record |
+| Fieldy, Friend, UMEVO, Vibe Dot, Legend, soundcore Work | various | $?-$499 | a crowded long tail |
+
+Two of the four original reference products now belong to Amazon and Meta.
+The independent field is crowded at the bottom and empty at the top: nobody
+is selling *judgement*, and almost everybody is selling capture plus
+summaries.
+
+## So what is actually left
+
+Measured against all of them, four things are ours and nobody else's:
+
+1. **Speech acts as data.** Commitment / assignment / decision / suggestion,
+   stored and queryable. Every competitor flattens these into a to-do list.
+   This is the one that makes the rest possible.
+2. **Who owes what, across conversations.** The open-loops ledger needs
+   `act` + `owner` + provenance, which none of them keep.
+3. **What was true then.** Bi-temporal validity - "your launch date has moved
+   three times". A storage claim cannot produce that sentence.
+4. **Honest capture.** The integrity receipt separates a gap from a silence.
+   Their limitation section names this exact problem and offers nothing.
+
+And one new thing, built the day this was written: **participant labelling**.
+Neo Sapien recognises the owner's voice and says nothing about anyone else;
+we let the user name who was in a conversation after the fact, which is
+*certain* evidence rather than probabilistic, and it accumulates across
+conversations. "What has Pulkit committed to" is a question none of them can
+answer and we now can.
+
+The honest summary: we are behind on breadth and ahead on judgement. Breadth
+is catchable with money and time, and four of our roadmap items just became
+less valuable because a Rs 12,999 device already has them. Judgement is the
+part that took the eval sets, the speech-act schema and the three bugs we
+caught by running things over real recordings - and it is the part that does
+not fall out of a feature list.

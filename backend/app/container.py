@@ -141,7 +141,9 @@ def build_container(
     person_service = PersonService(people=people_repo)
     utterance_service = UtteranceService(utterances=utterances_repo)
     question_parser = QuestionParser(
-        people=person_service, utterances=utterance_service
+        people=person_service,
+        utterances=utterance_service,
+        sessions=sessions_repo,
     )
     task_service = TaskService(tasks=tasks_repo, people=person_service)
     action_engine = ActionEngine(actions=actions_repo)
@@ -218,6 +220,7 @@ def build_container(
         tasks=task_service,
         approval=approval_service,
         utterances=utterance_service,
+        people=person_service,
         blobs=blobs,
         pipeline=pipeline,
         settings=settings,

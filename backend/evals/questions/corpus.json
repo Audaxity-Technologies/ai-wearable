@@ -4,8 +4,15 @@
   "tz": "Asia/Kolkata",
   "user_id": "eval-user",
   "people": [
-    { "name": "Pulkit", "aliases": ["pull kit"] },
-    { "name": "Priya" }
+    {
+      "name": "Pulkit",
+      "aliases": [
+        "pull kit"
+      ]
+    },
+    {
+      "name": "Priya"
+    }
   ],
   "self_person": "Manan",
   "sessions": [
@@ -24,7 +31,14 @@
           "act": "commitment",
           "owner": "Pulkit"
         },
-        { "text": "The coffee machine is broken again", "act": null, "owner": null }
+        {
+          "text": "The coffee machine is broken again",
+          "act": null,
+          "owner": null
+        }
+      ],
+      "participants": [
+        "Pulkit"
       ]
     },
     {
@@ -42,6 +56,9 @@
           "act": "suggestion",
           "owner": "Priya"
         }
+      ],
+      "participants": [
+        "Priya"
       ]
     },
     {
@@ -64,6 +81,9 @@
           "act": "assignment",
           "owner": "Pulkit"
         }
+      ],
+      "participants": [
+        "Pulkit"
       ]
     },
     {
@@ -76,7 +96,9 @@
           "act": null,
           "owner": null
         }
-      ]
+      ],
+      "participants": []
     }
-  ]
+  ],
+  "note_on_participants": "Participant labels are what the user tells us, and they are the only attribution evidence that is certain. They record PRESENCE, not who spoke which sentence - so a question about Pulkit narrows to conv-16 and conv-24 and no further. conv-25 is deliberately unlabelled, so a person question must exclude it."
 }

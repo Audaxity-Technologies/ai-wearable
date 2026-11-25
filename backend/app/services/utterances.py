@@ -7,6 +7,7 @@ to infer.
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Collection
 
 from app.core.logging import get_logger, log_event
 from app.core.text import normalise
@@ -197,6 +198,7 @@ class UtteranceService:
         actionable_only: bool = False,
         place: str | None = None,
         speaker_person_id: str | None = None,
+        session_ids: Collection[str] | None = None,
         contains: str | None = None,
         limit: int = 100,
     ) -> tuple[list[Utterance], int]:
@@ -221,6 +223,13 @@ class UtteranceService:
             rows = [u for u in rows if u.act is act]
         if actionable_only:
             rows = [u for u in rows if u.is_actionable]
+        if session_ids is not None:
+            # Narrowing to named conversations. Used by participant
+            # labelling: an EMPTY set means 'no conversation qualifies',
+            # which must return nothing rather than everything - the
+            # difference between an honest empty and a silent widening.
+            wanted_sessions = set(session_ids)
+            rows = [u for u in rows if u.session_id in wanted_sessions]
         if speaker_person_id is not None:
             rows = [
                 u for u in rows if u.speaker_person_id == speaker_person_id

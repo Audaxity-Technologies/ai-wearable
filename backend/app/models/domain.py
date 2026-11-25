@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from enum import StrEnum
+
 from pydantic import BaseModel, Field
 
 from app.core.ids import new_id
@@ -39,6 +41,33 @@ class TranscriptSpan(BaseModel):
     start_s: float
     end_s: float
     text: str
+
+
+class ParticipationRole(StrEnum):
+    """How someone was involved. Not who said which sentence."""
+
+    #: Took part in the conversation.
+    SPOKE = "spoke"
+    #: Talked about but not present. Worth recording: "what did we say about
+    #: Priya" is a real question, and she was not in the room.
+    MENTIONED = "mentioned"
+    #: The account holder. Kept explicit so the own/owed split does not have
+    #: to re-derive it from the people index on every query.
+    SELF = "self"
+
+
+class Participation(BaseModel):
+    """One person's involvement in one conversation."""
+
+    person_id: str
+    name: str
+    role: ParticipationRole = ParticipationRole.SPOKE
+
+    #: "user" when the user said so, "extraction" when the analysis named
+    #: them. Kept apart because only the first is certain, and a later
+    #: feature that weighs evidence must be able to tell them apart.
+    source: str = "user"
+    added_at: datetime = Field(default_factory=utc_now)
 
 
 class Segment(StoredModel):
@@ -86,6 +115,19 @@ class Session(StoredModel):
     #: Where this conversation happened, busiest first. Derived from the
     #: segments at close time; the per-segment records remain the truth.
     places: list[SessionPlace] = Field(default_factory=list)
+
+    #: Who was in this conversation, as told to us by the user.
+    #:
+    #: This is the one piece of attribution evidence that is **certain**. A
+    #: voiceprint is probabilistic and an extracted owner is the model's
+    #: reading of the words; "Pulkit was here" is a fact only the user has,
+    #: and it does not degrade with noise, distance or accent.
+    #:
+    #: It does NOT claim who spoke which sentence. A three-person
+    #: conversation labelled with three people says all three were present,
+    #: nothing more - which is why the query it powers reads "in
+    #: conversations with Pulkit" rather than "said by Pulkit".
+    participants: list[Participation] = Field(default_factory=list)
 
     failed_stage: str | None = None
     error: str | None = None

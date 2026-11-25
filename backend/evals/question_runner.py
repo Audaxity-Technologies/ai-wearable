@@ -30,7 +30,13 @@ from typing import Any
 
 from app.core.text import normalise
 from app.models.analysis import SpeechAct
-from app.models.domain import Segment, Session, TranscriptSpan
+from app.models.domain import (
+    Participation,
+    ParticipationRole,
+    Segment,
+    Session,
+    TranscriptSpan,
+)
 from app.models.memory import Memory
 from app.models.people import Person
 from app.models.places import CoarsePlace
@@ -89,6 +95,7 @@ async def build_world(tmp: Path) -> tuple[QuestionParser, str, dt.datetime]:
     now = dt.datetime.fromisoformat(cases["now"])
 
     people_repo = JsonRepository(tmp / "people.json", Person)
+    sessions_repo = JsonRepository(tmp / "sessions.json", Session)
     utter_repo = JsonRepository(tmp / "utterances.json", Utterance)
     people = PersonService(people=people_repo)
     utterances = UtteranceService(utterances=utter_repo)
@@ -135,6 +142,22 @@ async def build_world(tmp: Path) -> tuple[QuestionParser, str, dt.datetime]:
             spans=spans,
             place=place,
         )
+        # Participant labels, applied the way a user would: resolved
+        # through the people index, so an alias lands on the same person.
+        for name in conversation.get("participants", []):
+            person = await people.resolve_or_create(
+                user, name, session_id=session.id, at=started
+            )
+            assert person is not None
+            session.participants.append(
+                Participation(
+                    person_id=person.id,
+                    name=person.canonical_name,
+                    role=ParticipationRole.SPOKE,
+                )
+            )
+        await sessions_repo.put(session)
+
         built = await utterances.rebuild_for_session(session, [segment])
         # Attach the labelled acts directly. The linking rules are the
         # utterance eval's business; here the acts are given, so a retrieval
@@ -145,7 +168,9 @@ async def build_world(tmp: Path) -> tuple[QuestionParser, str, dt.datetime]:
                 utterance.item_owner = row.get("owner")
                 await utter_repo.put(utterance)
 
-    parser = QuestionParser(people=people, utterances=utterances)
+    parser = QuestionParser(
+        people=people, utterances=utterances, sessions=sessions_repo
+    )
     return parser, user, now
 
 

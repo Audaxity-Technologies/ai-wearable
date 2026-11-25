@@ -41,7 +41,9 @@ from app.models.questions import (
     ResolvedQuestion,
     ResolvedTimeRange,
 )
+from app.models.domain import Session
 from app.models.utterances import UtteranceResponse
+from app.repositories.base import Repository
 from app.services.people import PersonService
 from app.services.utterances import UtteranceService
 
@@ -116,9 +118,14 @@ class QuestionParser:
         *,
         people: PersonService,
         utterances: UtteranceService,
+        sessions: Repository[Session] | None = None,
     ) -> None:
         self._people = people
         self._utterances = utterances
+        # The session store, not the session service: all this needs is the
+        # participant labels, and reaching for the service would couple the
+        # parser to ingest, blobs and the pipeline.
+        self._sessions = sessions
 
     # --- parsing ----------------------------------------------------------
 
@@ -355,6 +362,22 @@ class QuestionParser:
             return QuestionKind.POINT_LOOKUP
         return QuestionKind.UNKNOWN
 
+    async def _sessions_with(
+        self, user_id: str, person_ids: list[str]
+    ) -> list[str]:
+        """Conversations any of these people were labelled into."""
+        if self._sessions is None:
+            return []
+        wanted = set(person_ids)
+        sessions = await self._sessions.list(user_id=user_id)
+        return [
+            session.id
+            for session in sessions
+            if any(
+                entry.person_id in wanted for entry in session.participants
+            )
+        ]
+
     # --- answering --------------------------------------------------------
 
     async def answer(
@@ -401,9 +424,34 @@ class QuestionParser:
                 verdict="That would search everything you have ever recorded.",
             )
 
+        # A named person narrows to the conversations they were labelled
+        # into. This is what makes the person filter actually filter: before
+        # participant labelling it resolved correctly and could never narrow,
+        # because nothing attributes a sentence to anybody.
+        #
+        # Note what it does NOT claim. "In conversations with Pulkit" is not
+        # "said by Pulkit" - a label records presence, not who spoke which
+        # sentence - and `describe()` says so in those words.
+        session_ids: list[str] | None = None
+        if resolved.person_ids and self._sessions is not None:
+            session_ids = await self._sessions_with(
+                user_id, resolved.person_ids
+            )
+            if not session_ids:
+                return QuestionAnswer(
+                    resolved=resolved,
+                    total=0,
+                    verdict=(
+                        f"No conversation is labelled with "
+                        f"{', '.join(resolved.person_names)}. Open the "
+                        "conversation and say who was there."
+                    ),
+                )
+
         act = resolved.acts[0] if len(resolved.acts) == 1 else None
         rows, total = await self._utterances.query(
             user_id=user_id,
+            session_ids=session_ids,
             since=resolved.time_range.start if resolved.time_range else None,
             until=resolved.time_range.end if resolved.time_range else None,
             act=act,

@@ -19,6 +19,7 @@ from app.models.analysis import (
 from app.models.domain import Segment, Session, TranscriptSpan
 from app.models.memory import Memory, MemoryKind
 from app.models.tasks import Task, TaskStatus
+from app.models.domain import Participation
 from app.models.places import CoarsePlace, SessionPlace
 from app.models.status import SegmentStatus, SessionStatus
 
@@ -49,6 +50,9 @@ class SessionSummary(BaseModel):
     #: Where the conversation happened, busiest first. Empty whenever place
     #: capture is off, which is the default.
     places: list[SessionPlace] = Field(default_factory=list)
+    #: Who the user told us was here. Certain, unlike a voiceprint - and it
+    #: records presence, not who spoke which sentence.
+    participants: list[Participation] = Field(default_factory=list)
 
     @classmethod
     def from_domain(cls, session: Session) -> SessionSummary:
@@ -67,6 +71,7 @@ class SessionSummary(BaseModel):
             failed_stage=session.failed_stage,
             error=session.error,
             places=session.places,
+            participants=session.participants,
         )
 
 

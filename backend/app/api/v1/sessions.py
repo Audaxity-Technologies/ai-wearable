@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter, Body, Query, Response, status
 
 from app.api.deps import CurrentUserId, SessionServiceDep
 from app.models.dto import (
@@ -22,6 +22,7 @@ from app.models.dto import (
     SessionSummary,
     TranscriptResponse,
 )
+from app.models.domain import ParticipationRole
 from app.models.status import SessionStatus
 from app.services.integrity import CaptureReceipt
 
@@ -114,6 +115,57 @@ async def get_analysis(
 ) -> AnalysisResponse:
     return AnalysisResponse.from_domain(
         await service.get_analysis(session_id, user_id=user_id)
+    )
+
+
+@router.post(
+    "/{session_id}/participants",
+    response_model=SessionSummary,
+    summary="Say who was in this conversation",
+)
+async def add_participant(
+    session_id: str,
+    service: SessionServiceDep,
+    user_id: CurrentUserId,
+    name: Annotated[str, Body(embed=True)],
+    role: Annotated[ParticipationRole, Body(embed=True)] = (
+        ParticipationRole.SPOKE
+    ),
+) -> SessionSummary:
+    """Works after the fact, which is the point.
+
+    The name resolves through the people index, so "Pull kit" lands on the
+    existing Pulkit, and the session is recorded on that person - which is
+    how the relationship accumulates across conversations.
+
+    This is the only piece of attribution evidence that is **certain**: a
+    voiceprint is probabilistic and an extracted owner is the model's reading
+    of the words, while "Pulkit was here" is a fact only the user has.
+    """
+    return SessionSummary.from_domain(
+        await service.add_participant(
+            session_id, name, role=role, user_id=user_id
+        )
+    )
+
+
+@router.delete(
+    "/{session_id}/participants/{person_id}",
+    response_model=SessionSummary,
+    summary="Remove a participant label",
+)
+async def remove_participant(
+    session_id: str,
+    person_id: str,
+    service: SessionServiceDep,
+    user_id: CurrentUserId,
+) -> SessionSummary:
+    """Unlabels this conversation only. The person and their other
+    conversations are untouched."""
+    return SessionSummary.from_domain(
+        await service.remove_participant(
+            session_id, person_id, user_id=user_id
+        )
     )
 
 

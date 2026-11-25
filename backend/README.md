@@ -705,3 +705,24 @@ Sixteen questions over a fixed corpus. **Runs in pytest too**
 call, so it costs nothing and cannot flake. Resolution and citations are
 scored separately: a case can resolve the right filter and cite the wrong
 spans, and those are different bugs.
+
+## Participant labelling
+
+| Route | What it does |
+|---|---|
+| `POST /v1/sessions/{id}/participants` | Say who was in a conversation, after the fact |
+| `DELETE /v1/sessions/{id}/participants/{person_id}` | Remove the label |
+
+The name resolves through the people index, so "Pull kit" lands on the
+existing Pulkit, and the session is recorded on that person — which is how
+the relationship accumulates. Label three conversations with Pulkit and the
+next question about him searches all three.
+
+**It records presence, not authorship.** A label never sets
+`speaker_person_id` and never assigns an unowned task. The question filter
+therefore reads "in conversations with Pulkit", not "by Pulkit" — and there is
+a test asserting that wording, because overstating it is the easy mistake.
+
+It is the only attribution evidence that is **certain**: a voiceprint is
+probabilistic and an extracted owner is the model's reading of the words,
+while "Pulkit was here" is a fact only the user has.

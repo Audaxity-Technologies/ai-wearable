@@ -9,10 +9,14 @@
       "question": "what did I commit to yesterday",
       "expect": {
         "kind": "temporal",
-        "acts": ["commitment"],
+        "acts": [
+          "commitment"
+        ],
         "about_self": true,
         "time_label": "yesterday",
-        "texts": ["I will send the investor deck tonight"]
+        "texts": [
+          "I will send the investor deck tonight"
+        ]
       },
       "note": "The 24th. Must not return the hostel form from the 21st."
     },
@@ -21,7 +25,9 @@
       "question": "what did we decide on Saturday",
       "expect": {
         "kind": "temporal",
-        "acts": ["decision"],
+        "acts": [
+          "decision"
+        ],
         "time_label": "Saturday",
         "total": 0
       },
@@ -32,9 +38,13 @@
       "question": "what did we decide last week",
       "expect": {
         "kind": "temporal",
-        "acts": ["decision"],
+        "acts": [
+          "decision"
+        ],
         "time_label": "last week",
-        "texts": ["We decided to go with the Groq provider for now"]
+        "texts": [
+          "We decided to go with the Groq provider for now"
+        ]
       },
       "note": "Mon 16th to Sun 22nd, so the 16th decision is in and the 24th pricing decision is out."
     },
@@ -53,9 +63,13 @@
       "question": "what did we decide at Blue Tokai",
       "expect": {
         "kind": "point_lookup",
-        "acts": ["decision"],
+        "acts": [
+          "decision"
+        ],
         "place": "Blue Tokai",
-        "texts": ["We decided the pricing stays at nineteen ninety"]
+        "texts": [
+          "We decided the pricing stays at nineteen ninety"
+        ]
       },
       "note": "Two constraints narrowing to one span out of three at that place. The query session-grained retrieval could not express."
     },
@@ -64,18 +78,32 @@
       "question": "what has Pulkit committed to",
       "expect": {
         "kind": "relationship",
-        "acts": ["commitment"],
-        "person_names": ["Pulkit"]
+        "acts": [
+          "commitment"
+        ],
+        "person_names": [
+          "Pulkit"
+        ],
+        "texts": [
+          "Pulkit said he would send the compliance forms by Monday"
+        ]
       },
-      "note": "Resolution only. Citations are NOT asserted: nothing populates `speaker_person_id` yet, so the person filter resolves and cannot narrow. That gap is the point of participant labelling, and this case is what will start passing citations when it lands."
+      "note": "Citations are asserted now that participant labelling exists. Before it, this case deliberately asserted resolution only: the person filter resolved and could never narrow, because nothing attributed a sentence to anybody. It was the tripwire for this feature and it has now tripped."
     },
     {
       "id": "person_misheard_alias",
       "question": "what did pull kit promise",
       "expect": {
         "kind": "relationship",
-        "acts": ["commitment"],
-        "person_names": ["Pulkit"]
+        "acts": [
+          "commitment"
+        ],
+        "person_names": [
+          "Pulkit"
+        ],
+        "texts": [
+          "Pulkit said he would send the compliance forms by Monday"
+        ]
       },
       "note": "Whisper's mis-hearing must resolve to the same person. This is phase B's squash rule reached through the question parser."
     },
@@ -96,8 +124,12 @@
       "expect": {
         "kind": "existence",
         "about_self": true,
-        "terms": ["exam"],
-        "texts": ["The exam timetable came out this morning"]
+        "terms": [
+          "exam"
+        ],
+        "texts": [
+          "The exam timetable came out this morning"
+        ]
       }
     },
     {
@@ -105,9 +137,14 @@
       "question": "how many times did I promise something",
       "expect": {
         "kind": "aggregation",
-        "acts": ["commitment"],
+        "acts": [
+          "commitment"
+        ],
         "about_self": true,
-        "not_terms": ["many", "times"]
+        "not_terms": [
+          "many",
+          "times"
+        ]
       },
       "note": "The scaffolding must not leak into the text filter. 'how many' once left 'many' behind and the filter started matching on it."
     },
@@ -134,8 +171,12 @@
       "question": "what did we decide about the budget",
       "expect": {
         "kind": "point_lookup",
-        "acts": ["decision"],
-        "terms": ["budget"],
+        "acts": [
+          "decision"
+        ],
+        "terms": [
+          "budget"
+        ],
         "total": 0,
         "verdict_contains": "nothing recorded matches"
       },
@@ -146,8 +187,12 @@
       "question": "what did anyone suggest",
       "expect": {
         "kind": "point_lookup",
-        "acts": ["suggestion"],
-        "texts": ["Priya suggested we move the review to next week"]
+        "acts": [
+          "suggestion"
+        ],
+        "texts": [
+          "Priya suggested we move the review to next week"
+        ]
       },
       "note": "Base verb forms matter: 'suggest' was missing from the act table while 'suggested' was present, and this case is what caught it."
     },
@@ -156,8 +201,12 @@
       "question": "what was Pulkit supposed to do",
       "expect": {
         "kind": "relationship",
-        "acts": ["assignment"],
-        "person_names": ["Pulkit"]
+        "acts": [
+          "assignment"
+        ],
+        "person_names": [
+          "Pulkit"
+        ]
       }
     },
     {
@@ -165,13 +214,43 @@
       "question": "what did I commit to at Blue Tokai yesterday",
       "expect": {
         "kind": "temporal",
-        "acts": ["commitment"],
+        "acts": [
+          "commitment"
+        ],
         "about_self": true,
         "place": "Blue Tokai",
         "time_label": "yesterday",
-        "texts": ["I will send the investor deck tonight"]
+        "texts": [
+          "I will send the investor deck tonight"
+        ]
       },
       "note": "Four constraints at once. The single most important case in the set: it is the shape of the question the whole memory plan exists to answer."
+    },
+    {
+      "id": "person_excludes_unlabelled",
+      "question": "what did Priya suggest",
+      "expect": {
+        "kind": "relationship",
+        "acts": [
+          "suggestion"
+        ],
+        "person_names": [
+          "Priya"
+        ],
+        "texts": [
+          "Priya suggested we move the review to next week"
+        ],
+        "total": 1
+      },
+      "note": "Priya is labelled only into conv-21, so the filter must exclude the other three conversations. total==1 is the assertion that narrowing really narrows rather than merely resolving."
+    },
+    {
+      "id": "person_never_labelled",
+      "question": "what did Ravi promise",
+      "expect": {
+        "total": 0
+      },
+      "note": "Nobody named Ravi is recorded, so there is no person to filter on and the name falls through to a text term that matches nothing. Must be an honest empty, not an unconstrained search."
     }
   ]
 }

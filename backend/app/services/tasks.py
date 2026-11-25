@@ -275,9 +275,16 @@ class TaskService:
         due_date: dt.date | None = None,
         due_time: dt.time | None = None,
         project: str | None = None,
+        owner_person_id: str | None = None,
         clear_due: bool = False,
     ) -> Task:
         task = await self.get(task_id)
+
+        if owner_person_id is not None:
+            # Set by participant labelling, which is certain evidence:
+            # the extracted owner matched this person AND the user told
+            # us they were there.
+            task.owner_person_id = owner_person_id
 
         if title is not None:
             if not title.strip():

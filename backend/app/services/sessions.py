@@ -20,11 +20,18 @@ from app.core.ids import validate_uuid
 from app.core.logging import get_logger, log_event
 from app.core.time_utils import to_utc, utc_now, validate_timezone
 from app.models.analysis import ConversationAnalysis
-from app.models.domain import Job, Segment, Session
+from app.models.domain import (
+    Job,
+    Participation,
+    ParticipationRole,
+    Segment,
+    Session,
+)
 from app.models.places import CoarsePlace, summarise_places
 from app.models.status import SegmentStatus, SessionStatus, assert_transition
 from app.repositories.base import BlobStore, Repository
 from app.services.integrity import CaptureReceipt, build_receipt
+from app.services.people import PersonService
 from app.services.utterances import UtteranceService
 from app.repositories.blob import blob_key, extension_for
 from app.services.approval import ApprovalService
@@ -58,6 +65,7 @@ class SessionService:
         tasks: TaskService,
         approval: ApprovalService,
         utterances: UtteranceService | None = None,
+        people: PersonService | None = None,
         blobs: BlobStore,
         pipeline: PipelineService,
         settings: Settings,
@@ -66,6 +74,7 @@ class SessionService:
         self._task_service = tasks
         self._approval = approval
         self._utterances = utterances
+        self._people = people
         self._sessions = sessions
         self._segments = segments
         self._jobs = jobs
@@ -190,6 +199,127 @@ class SessionService:
                 "processing."
             )
         return analysis
+
+    # --- participants -----------------------------------------------------
+
+    async def add_participant(
+        self,
+        session_id: str,
+        name: str,
+        *,
+        role: ParticipationRole = ParticipationRole.SPOKE,
+        user_id: str | None = None,
+    ) -> Session:
+        """Record that someone was in this conversation.
+
+        Resolves the name through `PersonService`, so "Pull kit" lands on the
+        existing Pulkit rather than creating a second person - the label
+        benefits from phase B's alias matching for free.
+
+        The session is also appended to that `Person`'s provenance, which is
+        what makes the relationship accumulate: label three conversations
+        with Pulkit and his row knows about all three, so the next question
+        about him searches all three.
+        """
+        session = await self.get_session(session_id, user_id=user_id)
+        if self._people is None:
+            raise ValidationError("Person identity is not configured.")
+
+        person = await self._people.resolve_or_create(
+            session.user_id, name, session_id=session.id, at=session.started_at
+        )
+        if person is None:
+            # Sentinels and pronouns are not people. Refusing loudly beats
+            # creating a participant called "someone".
+            raise ValidationError(
+                f"{name!r} cannot be used as a person's name."
+            )
+
+        existing = {entry.person_id for entry in session.participants}
+        if person.id not in existing:
+            session.participants.append(
+                Participation(
+                    person_id=person.id,
+                    name=person.canonical_name,
+                    role=ParticipationRole.SELF if person.is_self else role,
+                    source="user",
+                )
+            )
+            session.touch()
+            await self._sessions.put(session)
+            log_event(
+                logger,
+                "session.participant_added",
+                session_id=session.id,
+                person_id=person.id,
+                role=role.value,
+            )
+
+        # A task whose extracted owner matches a participant can now be
+        # attributed with certainty: the name matched AND we know they were
+        # there. This is the one place the label improves old rows.
+        await self._attribute_tasks(session, person)
+        return await self.get_session(session_id, user_id=user_id)
+
+    async def remove_participant(
+        self, session_id: str, person_id: str, *, user_id: str | None = None
+    ) -> Session:
+        """Unlabel. The `Person` and their other sessions are untouched."""
+        session = await self.get_session(session_id, user_id=user_id)
+        before = len(session.participants)
+        session.participants = [
+            entry for entry in session.participants
+            if entry.person_id != person_id
+        ]
+        if len(session.participants) != before:
+            session.touch()
+            await self._sessions.put(session)
+        return session
+
+    async def sessions_with(
+        self, *, user_id: str, person_id: str
+    ) -> list[str]:
+        """Ids of conversations this person took part in.
+
+        What turns "what has Pulkit committed to" from a filter that resolves
+        and cannot narrow into one that actually narrows.
+        """
+        sessions = await self._sessions.list(user_id=user_id)
+        return [
+            session.id
+            for session in sessions
+            if any(
+                entry.person_id == person_id for entry in session.participants
+            )
+        ]
+
+    async def _attribute_tasks(self, session: Session, person) -> None:
+        """Fill in `owner_person_id` on this session's tasks where the owner
+        string names this participant.
+
+        Deliberately narrow: only when the extracted owner already matches
+        the person's name or an alias. It never assigns a task to whoever
+        happened to be present, because "someone in the room committed to
+        this" is not the same as "this person did".
+        """
+        if self._task_service is None:
+            return
+        try:
+            tasks = await self._task_service.list_tasks(
+                user_id=session.user_id
+            )
+        except Exception:  # pragma: no cover - defensive
+            return
+        for task in tasks:
+            if session.id not in task.source_session_ids:
+                continue
+            if task.owner_person_id is not None:
+                continue
+            if not person.matches(task.owner):
+                continue
+            await self._task_service.update(
+                task.id, owner_person_id=person.id
+            )
 
     async def get_receipt(
         self, session_id: str, *, user_id: str | None = None

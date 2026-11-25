@@ -151,7 +151,12 @@ class ResolvedQuestion(BaseModel):
         elif self.actionable_only:
             parts.append("commitments")
         if self.person_names:
-            parts.append("by " + ", ".join(self.person_names))
+            # "in conversations with", never "by": a participant label
+            # records presence, not who spoke which sentence, and the
+            # wording the user reads must not overstate it.
+            parts.append(
+                "in conversations with " + ", ".join(self.person_names)
+            )
         elif self.about_self:
             parts.append("by you")
         if self.time_range:

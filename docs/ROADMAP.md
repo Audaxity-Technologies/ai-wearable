@@ -23,6 +23,29 @@ ledger.
 
 ---
 
+## Re-priced by the competition, 2026-11-26
+
+Neo Sapien ships four of these at Rs 12,999 with no subscription (see
+[COMPETITIVE_LANDSCAPE.md](COMPETITIVE_LANDSCAPE.md)). They are now table
+stakes rather than differentiators, which changes what is worth building
+next:
+
+| Item | Was | Now |
+|---|---|---|
+| MCP server (Tier 2) | "small work, large reach" | **they shipped it**; still do it, but it wins nothing |
+| Desktop capture (Tier 3) | "real demand" | **they shipped it** |
+| Multi-language / Hinglish (Tier 3) | "later" | **they ship 140+**; a gap, not an edge |
+| Owner voice enrolment (0a) | our differentiator | **they shipped it** - though our three-way verdict is still better than a binary one |
+
+What went **up** in value, because nobody else has it: speech acts as data,
+the open-loops ledger, bi-temporal change tracking, the capture-integrity
+receipt, and participant labelling. All five are built.
+
+What that implies: stop adding breadth for its own sake. The remaining
+roadmap items worth doing are the ones that make judgement visible to a
+user in the first five minutes - which is the mobile UI for what already
+exists, not more backend.
+
 ## 0. Finish what is already half-built
 
 **These are defects, not features.** Each one is something shipped this month
