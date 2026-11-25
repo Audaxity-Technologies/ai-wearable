@@ -18,6 +18,7 @@ from app.models.memory import Memory
 from app.models.tasks import Task
 from app.models.users import Device, User
 from app.models.people import Person
+from app.models.utterances import Utterance
 from app.models.voice import VoiceProfile
 from app.repositories.blob import LocalBlobStore
 from app.repositories.json_repo import JsonRepository
@@ -38,6 +39,7 @@ from app.services.pipeline import PipelineService
 from app.services.sessions import SessionService
 from app.services.people import PersonService
 from app.services.tasks import TaskService
+from app.services.utterances import UtteranceService
 from app.services.voice.enrolment import VoiceService
 from app.services.voice.factory import build_speaker_embedding_driver
 from app.services.transcription.base import TranscriptionDriver
@@ -59,6 +61,7 @@ class Container:
     google_accounts_repo: JsonRepository[GoogleAccount]
     voice_profiles_repo: JsonRepository[VoiceProfile]
     people_repo: JsonRepository[Person]
+    utterances_repo: JsonRepository[Utterance]
     blobs: LocalBlobStore
     driver: TranscriptionDriver
     llm: LLMDriver
@@ -73,6 +76,7 @@ class Container:
     google_oauth: GoogleOAuthService
     voice_service: VoiceService
     person_service: PersonService
+    utterance_service: UtteranceService
     briefing_service: BriefingService
     push: ExpoPushDriver | NullPushDriver
     pipeline: PipelineService
@@ -123,6 +127,9 @@ def build_container(
     people_repo: JsonRepository[Person] = JsonRepository(
         settings.store_dir / "people.json", Person
     )
+    utterances_repo: JsonRepository[Utterance] = JsonRepository(
+        settings.store_dir / "utterances.json", Utterance
+    )
     blobs = LocalBlobStore(settings.audio_dir)
 
     transcription_driver = driver or build_transcription_driver(settings)
@@ -130,6 +137,7 @@ def build_container(
     analysis_service = AnalysisService(driver=llm_driver)
     memory_service = MemoryService(memories=memories_repo)
     person_service = PersonService(people=people_repo)
+    utterance_service = UtteranceService(utterances=utterances_repo)
     task_service = TaskService(tasks=tasks_repo, people=person_service)
     action_engine = ActionEngine(actions=actions_repo)
     voice_service = VoiceService(
@@ -189,6 +197,7 @@ def build_container(
         analysis=analysis_service,
         memory=memory_service,
         tasks=task_service,
+        utterances=utterance_service,
         actions=action_engine,
         briefing=briefing_service,
         worker_count=settings.pipeline_workers,
@@ -203,6 +212,7 @@ def build_container(
         memory=memory_service,
         tasks=task_service,
         approval=approval_service,
+        utterances=utterance_service,
         blobs=blobs,
         pipeline=pipeline,
         settings=settings,
@@ -221,6 +231,7 @@ def build_container(
         google_accounts_repo=google_accounts_repo,
         voice_profiles_repo=voice_profiles_repo,
         people_repo=people_repo,
+        utterances_repo=utterances_repo,
         blobs=blobs,
         driver=transcription_driver,
         llm=llm_driver,
@@ -235,6 +246,7 @@ def build_container(
         google_oauth=google_oauth,
         voice_service=voice_service,
         person_service=person_service,
+        utterance_service=utterance_service,
         briefing_service=briefing_service,
         push=push_driver,
         pipeline=pipeline,

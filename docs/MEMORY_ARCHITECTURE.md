@@ -281,7 +281,7 @@ Worth knowing before you promise it to anyone:
 |---|---|---|---|
 | **A** | `coarse_place` on `Segment` + `Session` | unbackfillable; do it first | **done 2026-11-21** |
 | **B** | `Person` entity, aliases, merge UI | unblocks everything | **done 2026-11-21** |
-| **C** | L1 utterance index (+ speaker, place, absolute time) | the missing grain | 3 d |
+| **C** | L1 utterance index (+ speaker, place, absolute time) | the missing grain | **done 2026-11-25** |
 | **D** | Question parser: classify + resolve + **clarify** | the product | 5–6 d |
 | **E** | Bi-temporal edges; `conflicts_with` → invalidation | the differentiator | 4–5 d |
 | **F** | Embeddings as a ranker *inside* the filter | last, deliberately | 2–3 d |
@@ -404,6 +404,47 @@ silently reassigned.
 **What is still unbuilt:** the L1 utterance index (phase C) and the question
 parser (phase D). Identity now exists for them to point at, which is the
 whole reason B came before C.
+
+## Phase C as built (2026-11-25)
+
+One row per span, carrying **absolute** time, the segment's place, and the
+speech act of any extracted item quoted from it. Built by the pipeline right
+after analysis — including when the analysis degraded, because the spans and
+their timestamps are still true and an index of what was said is useful
+precisely when extraction failed.
+
+**Derived and rebuildable, deliberately.** `scripts/rebuild_utterances.py`
+drops a session's rows and rebuilds them from stored segments. The linking
+rules will change as phase D learns what questions need, and a layer you
+cannot rebuild is a layer you cannot fix.
+
+**The linking rule was wrong on its first run against real audio.** It scored
+spans against each item's `source_quote` with `quote_similarity`, which
+returns 1.0 for any exact substring — and on short strings compares
+single-word windows. `quote_similarity("Also", "So remind me")` is **0.67**,
+so a four-character span was tagged as an `assignment`. Replaced with word
+overlap plus a minimum length: containment counts only when the shorter side
+is at least six characters, and otherwise two significant shared words are
+required. That dropped the real session from 10 links to 8, and both removed
+links were spurious. A quote spanning two spans still links both.
+
+**Two things it refuses to infer.** `speaker_person_id` stays `None` until
+voice enrolment is measured (roadmap 0a) — `owner` is who took the work on,
+not who spoke, and "You should send the forms" has owner Pulkit and a
+different speaker. And a span matching no item gets no act, which is the
+ordinary case rather than a gap.
+
+**Querying filters, it does not rank.** `act` + time range + place + text, at
+sentence grain, returning `(page, total)` so a caller can tell "nothing
+matched" from "a great deal matched". Phase D decides *which* filter a
+question implies; phase F adds embeddings as a ranker inside a filtered set.
+Shipping the filter first is what keeps a wrong answer visibly wrong rather
+than plausibly wrong.
+
+Verified against real recordings: `place=academic` + `act=commitment`
++ a five-minute window returns the three sentences actually spoken at that
+place, out of 26 indexed. The session-grained retrieval could not express
+that query at all.
 
 ## What I'd push back on
 

@@ -16,6 +16,7 @@ from app.services.pipeline import PipelineService
 from app.services.sessions import SessionService
 from app.services.people import PersonService
 from app.services.tasks import TaskService
+from app.services.utterances import UtteranceService
 from app.services.voice.enrolment import VoiceService
 
 
@@ -80,6 +81,12 @@ def get_person_service(
     return container.person_service
 
 
+def get_utterance_service(
+    container: Annotated[Container, Depends(get_container)],
+) -> UtteranceService:
+    return container.utterance_service
+
+
 def get_auth_service(
     container: Annotated[Container, Depends(get_container)],
 ) -> AuthService:
@@ -120,6 +127,9 @@ async def resolve_user_id(
 
 VoiceServiceDep = Annotated[VoiceService, Depends(get_voice_service)]
 PersonServiceDep = Annotated[PersonService, Depends(get_person_service)]
+UtteranceServiceDep = Annotated[
+    UtteranceService, Depends(get_utterance_service)
+]
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 BriefingServiceDep = Annotated[BriefingService, Depends(get_briefing_service)]
 CurrentUserId = Annotated[str, Depends(resolve_user_id)]

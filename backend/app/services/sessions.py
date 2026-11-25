@@ -25,6 +25,7 @@ from app.models.places import CoarsePlace, summarise_places
 from app.models.status import SegmentStatus, SessionStatus, assert_transition
 from app.repositories.base import BlobStore, Repository
 from app.services.integrity import CaptureReceipt, build_receipt
+from app.services.utterances import UtteranceService
 from app.repositories.blob import blob_key, extension_for
 from app.services.approval import ApprovalService
 from app.services.memory import MemoryService
@@ -56,6 +57,7 @@ class SessionService:
         memory: MemoryService,
         tasks: TaskService,
         approval: ApprovalService,
+        utterances: UtteranceService | None = None,
         blobs: BlobStore,
         pipeline: PipelineService,
         settings: Settings,
@@ -63,6 +65,7 @@ class SessionService:
         self._memory = memory
         self._task_service = tasks
         self._approval = approval
+        self._utterances = utterances
         self._sessions = sessions
         self._segments = segments
         self._jobs = jobs
@@ -255,6 +258,14 @@ class SessionService:
         await self._analyses.delete(session_id)
         # Memories supported only by this conversation go too; ones with other
         # sources survive with this session detached.
+        # The utterance index is derived, but it is derived from audio the
+        # user is erasing. An index that outlives its source would answer
+        # questions about a recording they believe is gone.
+        utterances_deleted = (
+            await self._utterances.delete_for_session(session_id)
+            if self._utterances is not None
+            else 0
+        )
         memories_deleted = await self._memory.delete_for_session(session_id)
         tasks_deleted = await self._task_service.delete_for_session(session_id)
         # Executed actions survive: they record something that already
@@ -270,6 +281,7 @@ class SessionService:
             memories_deleted=memories_deleted,
             tasks_deleted=tasks_deleted,
             actions_deleted=actions_deleted,
+            utterances_deleted=utterances_deleted,
         )
 
     # --- ingest -----------------------------------------------------------

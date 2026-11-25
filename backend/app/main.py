@@ -27,6 +27,7 @@ from app.api.v1 import (
     people,
     sessions,
     tasks,
+    utterances,
     voice,
 )
 from app.config import Settings, get_settings
@@ -139,6 +140,7 @@ def create_app(
     app.include_router(integrations.router, prefix="/v1")
     app.include_router(voice.router, prefix="/v1")
     app.include_router(people.router, prefix="/v1")
+    app.include_router(utterances.router, prefix="/v1")
     return app
 
 

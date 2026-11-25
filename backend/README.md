@@ -601,3 +601,58 @@ cheaper trade.
 Google matches the redirect URI exactly, so each restart means re-registering
 it. Use `./scripts/tunnel.ps1 -Name <name> -Hostname <host>` for a stable one
 before registering anything.
+
+## Measuring a speaker model (roadmap 0a)
+
+```bash
+python scripts/collect_voice_clips.py --list
+python scripts/collect_voice_clips.py --session <id> --as owner
+python scripts/measure_speaker_models.py --clips ./voice_clips
+```
+
+See [docs/VOICE_ENROLMENT_PROTOCOL.md](../docs/VOICE_ENROLMENT_PROTOCOL.md).
+Record through the app, not the phone's voice recorder: the measurement is only
+worth anything if the clips came through the same encoder the product uses.
+
+Nothing in the product changes until a verdict justifies it —
+`SpeakerMatch.is_owner` returns `False` while the driver's `trustworthy` is
+`False`, so no code path can attribute a commitment on an unvalidated model's
+word.
+
+### Two test defects found while doing this
+
+Both were latent, neither was caused by the feature work, and both are the
+kind that erode trust in a suite:
+
+- `test_contradicting_deadline_surfaces_a_conflict` depended on **which
+  weekday you ran it**. On a Wednesday, "by Friday" and "the day after
+  tomorrow" both resolve to the same date, so there was no contradiction to
+  detect. `record()` now takes `started_at`, and any test comparing two dated
+  items must pin it.
+- `conftest.py` did not blank the Google settings. `Settings` is
+  pydantic-settings, so every field the fixture did not pass fell through to
+  the developer's real `.env` — meaning the suite changed behaviour the moment
+  someone configured Google locally.
+
+## Utterance index (memory phase C)
+
+| Route | What it answers |
+|---|---|
+| `GET /v1/utterances` | Filter by `since`/`until`, `act`, `actionable_only`, `place`, `contains` |
+| `GET /v1/utterances/by-session/{id}` | One conversation's sentences, in order |
+
+```bash
+python scripts/rebuild_utterances.py            # backfill every session
+python scripts/rebuild_utterances.py --verbose  # print each utterance
+```
+
+Always safe to re-run: it drops a session's rows and rebuilds them from
+stored segments. Run it after changing `LINK_THRESHOLD` or the linking rules
+in `services/utterances.py`.
+
+It **filters, it does not rank**. Phase D decides which filter a question
+implies; phase F adds embeddings as a ranker inside a filtered set.
+
+`speaker_person_id` is always `None` for now — `owner` is who took the work
+on, not who spoke, so filling one from the other would attribute speech to
+whoever was named.

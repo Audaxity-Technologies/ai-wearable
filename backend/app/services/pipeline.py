@@ -41,6 +41,7 @@ from app.services.actions import ActionEngine
 from app.services.analysis import AnalysisService
 from app.services.memory import MemoryService
 from app.services.tasks import TaskService
+from app.services.utterances import UtteranceService
 from app.services.transcription.base import TranscriptionDriver
 
 logger = get_logger(__name__)
@@ -62,6 +63,7 @@ class PipelineService:
         analysis: AnalysisService,
         memory: MemoryService,
         tasks: TaskService,
+        utterances: UtteranceService | None = None,
         actions: ActionEngine,
         briefing=None,
         worker_count: int = 1,
@@ -78,6 +80,10 @@ class PipelineService:
         self._analysis = analysis
         self._memory = memory
         self._tasks = tasks
+        # Optional so existing call sites keep working; with no service
+        # the index is simply not built, and `scripts/rebuild_utterances.py`
+        # can fill it in later from stored segments.
+        self._utterances = utterances
         self._actions = actions
         #: Optional: used to tell the user their conversation is ready.
         self._briefing = briefing
@@ -436,6 +442,11 @@ class PipelineService:
             actionable=len(analysis.actionable_items),
         )
 
+        # Built even when the analysis degraded: the spans and their
+        # timestamps are still true, and an index of what was said is useful
+        # precisely when the extraction failed.
+        await self._build_utterances(session_id, analysis)
+
         if not analysis.degraded:
             await self._write_memory(session_id, analysis)
             await self._propose_actions(session_id, analysis)
@@ -496,6 +507,33 @@ class PipelineService:
                 logger.exception(
                     "failed to notify about session %s", session_id
                 )
+
+    async def _build_utterances(
+        self, session_id: str, analysis: ConversationAnalysis
+    ) -> None:
+        """Rebuild the utterance index for this session.
+
+        Never fails the pipeline: this is a derived index that can be rebuilt
+        from stored segments at any time, so losing it costs a script run.
+        Failing a session over it would cost the recording.
+        """
+        if self._utterances is None:
+            return
+        try:
+            session = await self._sessions.get(session_id)
+            if session is None:
+                return
+            segments = await self._segments.list(session_id=session_id)
+            await self._utterances.rebuild_for_session(
+                session, segments, analysis
+            )
+        except Exception as exc:  # pragma: no cover - defensive
+            log_event(
+                logger,
+                "pipeline.utterances_failed",
+                session_id=session_id,
+                error=str(exc),
+            )
 
     async def _write_memory(
         self, session_id: str, analysis: ConversationAnalysis

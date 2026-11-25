@@ -20,16 +20,25 @@ async def record(
     wav_bytes: bytes,
     *,
     user_id: str = "dev-user",
+    started_at: str | None = None,
 ) -> str:
     """Record one conversation as `user_id`.
 
     Identity now comes from the token, or from the ?user_id= dev fallback the
     test settings leave enabled. It is no longer assertable in the body.
+
+    `started_at` pins when the conversation happened, which pins how relative
+    time phrases resolve. Any test comparing two dated items MUST pass it:
+    without it the session starts "now", and whether "by Friday" and "the day
+    after tomorrow" are the same date depends on which weekday the suite is
+    run. That is how `test_contradicting_deadline_surfaces_a_conflict` came
+    to pass for days and then fail on a Wednesday.
     """
     params = {"user_id": user_id}
-    opened = await client.post(
-        "/v1/sessions", json={"tz": "Asia/Kolkata"}, params=params
-    )
+    body: dict[str, object] = {"tz": "Asia/Kolkata"}
+    if started_at is not None:
+        body["started_at"] = started_at
+    opened = await client.post("/v1/sessions", json=body, params=params)
     session_id = opened.json()["id"]
     await client.post(
         "/v1/ingest/audio",
@@ -37,7 +46,7 @@ async def record(
             "segment_id": str(uuid.uuid4()),
             "session_id": session_id,
             "seq": "0",
-            "started_at": utc_now().isoformat(),
+            "started_at": started_at or utc_now().isoformat(),
             "duration_s": "20.0",
         },
         files={"file": ("seg0.wav", wav_bytes, "audio/wav")},
@@ -116,7 +125,12 @@ async def test_two_conversations_merge_into_one_memory(
 async def test_contradicting_deadline_surfaces_a_conflict(
     client: AsyncClient, container: Container, wav_bytes: bytes
 ) -> None:
-    await record(client, container, wav_bytes)
+    # A Monday, so "by Friday" is the 30th and "the day after tomorrow" is
+    # the 25th. Pinned because on a real Wednesday both phrases resolve to
+    # the same date and there is no contradiction to detect - which is a
+    # property of the calendar, not of the code under test.
+    monday = "2026-11-23T10:00:00+05:30"
+    await record(client, container, wav_bytes, started_at=monday)
 
     # Second conversation moves the investor-pitch deadline.
     revised = json.loads(json.dumps(DEFAULT_ANALYSIS))
@@ -127,7 +141,7 @@ async def test_contradicting_deadline_surfaces_a_conflict(
         }
     ]
     container.llm._responses = [json.dumps(revised)]  # noqa: SLF001
-    await record(client, container, wav_bytes)
+    await record(client, container, wav_bytes, started_at=monday)
 
     conflicted = (
         await client.get("/v1/memory", params={"conflicts_only": "true"})

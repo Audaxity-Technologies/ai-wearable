@@ -36,6 +36,15 @@ def settings(tmp_path: Path) -> Settings:
         auth_required=False,
         push_provider="none",
         jwt_secret="test-secret-at-least-32-characters-long",
+        # Explicitly blank. `Settings` is pydantic-settings, so any field
+        # NOT passed here falls through to the developer's real .env -
+        # which meant the suite changed behaviour the moment someone
+        # configured Google locally, and
+        # `test_status_reports_not_configured_without_credentials`
+        # started failing on their machine and nobody else's.
+        google_client_id="",
+        google_client_secret="",
+        google_enable_gmail=False,
     )
 
 
