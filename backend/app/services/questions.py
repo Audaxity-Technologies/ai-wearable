@@ -96,6 +96,12 @@ STOPWORDS = frozenset(
         "those", "there", "here", "say", "said", "tell", "told", "talk",
         "talked", "mention", "mentioned", "discuss", "discussed", "anything",
         "something", "ever", "again", "me", "i", "my", "any", "all", "some",
+        # Indefinite pronouns are scaffolding, not content. "What did anyone
+        # suggest" was filtering text on "anyone" and matching nothing, while
+        # resolving the act perfectly - which is the exact failure the
+        # retrieval eval exists to catch.
+        "anyone", "anybody", "everyone", "everybody", "somebody", "nobody",
+        "else", "thing", "things", "stuff",
         "ago", "last", "next", "day", "days", "week", "weeks", "month",
         "months", "time", "times", "happened", "happen", "going", "go",
         "get", "got", "would", "will", "can", "could", "should", "have",

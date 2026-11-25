@@ -62,9 +62,69 @@ class Memory(StoredModel):
     #: other, and both stay active.
     conflicts_with: list[str] = Field(default_factory=list)
 
+    # --- bi-temporal validity (phase E) ---------------------------------
+    #
+    # Two independent time axes, because they come apart constantly and the
+    # gap between them is where human memory questions live.
+    #
+    #     observed_at  when WE HEARD it
+    #     valid_from   when it became TRUE IN THE WORLD
+    #     valid_to     when it stopped being true (None = still believed)
+    #
+    # On 3 March Pulkit says "we moved the launch to June". The new fact's
+    # `observed_at` is 3 March; the old "launch is in April" gets
+    # `valid_to` = 3 March - invalidated, not deleted. `conflicts_with`
+    # could say the two disagreed; it could never say which was true in
+    # February.
+
+    #: When this was heard. `None` on rows written before phase E, so read
+    #: it through `heard_at`.
+    observed_at: dt.datetime | None = None
+
+    #: When the fact became true. **Defaults to `observed_at`, and that is an
+    #: admission rather than a measurement**: we almost never learn when
+    #: something became true, only when we were told. Pretending otherwise
+    #: would be false precision on the axis the whole feature rests on.
+    #: A date in `attributes` (a deadline, say) is the fact's *content* and
+    #: says nothing about when the fact itself held.
+    valid_from: dt.datetime | None = None
+
+    #: When a later statement replaced this. `None` means still believed.
+    valid_to: dt.datetime | None = None
+
+    #: The memory that invalidated this one. Directional, unlike
+    #: `conflicts_with`, which is mutual - and direction is what makes a
+    #: chain of changes walkable in order.
+    superseded_by: str | None = None
+
     @property
     def has_conflict(self) -> bool:
         return bool(self.conflicts_with)
+
+    @property
+    def heard_at(self) -> dt.datetime:
+        """When we were told, falling back to the row's creation."""
+        return self.observed_at or self.created_at
+
+    @property
+    def became_true_at(self) -> dt.datetime:
+        return self.valid_from or self.heard_at
+
+    @property
+    def is_current(self) -> bool:
+        """Still believed, i.e. nothing has replaced it."""
+        return self.valid_to is None
+
+    def was_valid_at(self, when: dt.datetime) -> bool:
+        """Whether this was the believed version at `when`.
+
+        Half-open: a fact is valid from the moment it was learned up to, but
+        not including, the moment it was replaced. Otherwise the instant of a
+        change would report both versions as true.
+        """
+        if when < self.became_true_at:
+            return False
+        return self.valid_to is None or when < self.valid_to
 
     @property
     def is_cross_conversation(self) -> bool:

@@ -1,0 +1,82 @@
+{
+  "description": "A fixed corpus for the retrieval eval. Four conversations across three days, two places and two people, with speech acts attached. Deliberately small: every expectation in cases.json must be checkable by hand, because a corpus you cannot reason about produces eval failures you cannot diagnose.",
+  "note_on_dates": "`now` in cases.json is Wednesday 2026-11-25T19:00+05:30. The corpus days are chosen so that 'yesterday' (24th), 'Saturday' (21st) and 'last week' (16th-22nd) each select a different conversation. That the weekday matters is a lesson from a real defect: an extraction test compared 'by Friday' against 'the day after tomorrow' and passed for days until a Wednesday made them the same date.",
+  "tz": "Asia/Kolkata",
+  "user_id": "eval-user",
+  "people": [
+    { "name": "Pulkit", "aliases": ["pull kit"] },
+    { "name": "Priya" }
+  ],
+  "self_person": "Manan",
+  "sessions": [
+    {
+      "id": "conv-16",
+      "started_at": "2026-11-16T10:00:00+05:30",
+      "place": "Office",
+      "spans": [
+        {
+          "text": "We decided to go with the Groq provider for now",
+          "act": "decision",
+          "owner": "group"
+        },
+        {
+          "text": "Pulkit said he would send the compliance forms by Monday",
+          "act": "commitment",
+          "owner": "Pulkit"
+        },
+        { "text": "The coffee machine is broken again", "act": null, "owner": null }
+      ]
+    },
+    {
+      "id": "conv-21",
+      "started_at": "2026-11-21T15:30:00+05:30",
+      "place": "ACADEMIC BLOCK",
+      "spans": [
+        {
+          "text": "I have to submit the hostel form the day after tomorrow",
+          "act": "commitment",
+          "owner": "Manan"
+        },
+        {
+          "text": "Priya suggested we move the review to next week",
+          "act": "suggestion",
+          "owner": "Priya"
+        }
+      ]
+    },
+    {
+      "id": "conv-24",
+      "started_at": "2026-11-24T18:00:00+05:30",
+      "place": "Blue Tokai",
+      "spans": [
+        {
+          "text": "I will send the investor deck tonight",
+          "act": "commitment",
+          "owner": "Manan"
+        },
+        {
+          "text": "We decided the pricing stays at nineteen ninety",
+          "act": "decision",
+          "owner": "group"
+        },
+        {
+          "text": "Pulkit is supposed to review the contract",
+          "act": "assignment",
+          "owner": "Pulkit"
+        }
+      ]
+    },
+    {
+      "id": "conv-25",
+      "started_at": "2026-11-25T09:15:00+05:30",
+      "place": "Office",
+      "spans": [
+        {
+          "text": "The exam timetable came out this morning",
+          "act": null,
+          "owner": null
+        }
+      ]
+    }
+  ]
+}

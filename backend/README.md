@@ -675,3 +675,33 @@ deadline), while a question faces **backward**. It returns ranges, not dates.
 Every response carries a `verdict`, including the refusals: needs
 clarification, not understood, would search everything, or matched nothing.
 An empty `utterances` list is never silently empty.
+
+## Bi-temporal memory (phase E)
+
+| Route | What it answers |
+|---|---|
+| `GET /v1/memory/as-of?when=` | What was believed true at a past moment |
+| `GET /v1/memory/history?key=` | Every version of one fact, oldest first |
+| `GET /v1/memory/changes` | Facts that keep moving, most-revised first |
+
+Two independent axes: `observed_at` (when we heard it) and
+`valid_from`/`valid_to` (when it was true). A contradiction **closes** the old
+version's interval rather than only linking `conflicts_with`, so "what did we
+think in February" and "how many times has this moved" come from the same
+rows. Nothing is deleted.
+
+`valid_from` mirrors `observed_at` deliberately — we learn when we were told,
+not when a fact became true, and a different value would be false precision.
+
+## Retrieval eval (phase G)
+
+```bash
+python scripts/run_question_eval.py
+python scripts/run_question_eval.py --plans     # print each resolved filter
+```
+
+Sixteen questions over a fixed corpus. **Runs in pytest too**
+(`tests/test_question_evals.py`) because phase D is deterministic — no LLM
+call, so it costs nothing and cannot flake. Resolution and citations are
+scored separately: a case can resolve the right filter and cite the wrong
+spans, and those are different bugs.

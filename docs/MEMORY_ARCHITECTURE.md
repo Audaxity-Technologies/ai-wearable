@@ -283,9 +283,9 @@ Worth knowing before you promise it to anyone:
 | **B** | `Person` entity, aliases, merge UI | unblocks everything | **done 2026-11-21** |
 | **C** | L1 utterance index (+ speaker, place, absolute time) | the missing grain | **done 2026-11-25** |
 | **D** | Question parser: classify + resolve + **clarify** | the product | **done 2026-11-25** |
-| **E** | Bi-temporal edges; `conflicts_with` → invalidation | the differentiator | 4–5 d |
+| **E** | Bi-temporal edges; `conflicts_with` → invalidation | the differentiator | **done 2026-11-25** |
 | **F** | Embeddings as a ranker *inside* the filter | last, deliberately | 2–3 d |
-| **G** | Retrieval eval set (question → expected citations) | **alongside D, not after** | ongoing |
+| **G** | Retrieval eval set (question → expected citations) | **alongside D, not after** | **done 2026-11-25** |
 
 **G is not optional and it is not last.** You already know this — the
 extraction eval caught two regressions in your last change that code review
@@ -496,6 +496,78 @@ produces nonsense on real input.
 Verified against real recordings: "what did we talk about at the academic
 block" returns the five sentences actually spoken there; "what did I commit
 to on Saturday" resolves Saturday backward to the 21st; "that day" asks.
+
+## Phases E and G as built (2026-11-25)
+
+### E - bi-temporal facts
+
+Every memory now carries `observed_at` (when we heard it), `valid_from` (when
+it became true) and `valid_to` (when it stopped). A contradiction closes the
+old version's interval and sets `superseded_by`, instead of only linking
+`conflicts_with` mutually. Nothing is deleted.
+
+`valid_from` mirrors `observed_at`, and that is **an admission rather than a
+measurement**: we learn when we were told, almost never when a fact became
+true, and inventing a different value would be false precision on the axis
+the whole feature rests on. A due date in `attributes` is the fact's
+*content* and says nothing about when the fact itself held.
+
+What it buys, demonstrated on four statements about one launch date:
+
+```
+heard 10 Jan  due 2026-04-01  [until 03 Mar]
+heard 03 Mar  due 2026-06-01  [until 20 May]
+heard 20 May  due 2026-08-01  [until 01 Sep]
+heard 01 Sep  due 2026-10-01  [CURRENT]
+
+Your launch date has moved 3 times.
+as of February -> 2026-04-01      <- what we believed then
+as of July     -> 2026-08-01
+```
+
+**The bug worth recording: the first pass closed the wrong row.** `_resolve`
+returned the first memory matching a key, so every change invalidated the
+January version while March and May both stayed "current", as-of July
+returned three overlapping answers, and the change count read 1 instead of 3.
+It passes with two versions and fails with four, which is why the
+demonstration used four. `_resolve` now returns the currently-valid version,
+most recently heard.
+
+Routes: `GET /v1/memory/as-of?when=`, `/v1/memory/history?key=`,
+`/v1/memory/changes`. They had to be declared **before** `/{memory_id}` or the
+path parameter captures "as-of" - the same ordering trap as the open-loops
+route.
+
+### G - the retrieval eval set
+
+Sixteen labelled questions over a fixed four-conversation corpus:
+`evals/questions/corpus.json` and `cases.json`, run by
+`evals/question_runner.py`, reported by `scripts/run_question_eval.py`.
+
+**It runs in pytest, and that is a direct dividend of phase D being
+deterministic.** No LLM call means a case costs nothing and cannot flake, so
+the set runs on every commit - where the extraction eval has to be run
+deliberately and paced against Groq's rate limits. Retrieval has more ways to
+degrade silently than extraction, so the cheaper eval is on the riskier half.
+
+**Resolution and citations are scored separately**, because a case can resolve
+the right filter and still cite the wrong spans - a parser fault versus an
+index fault - and one number would hide which.
+
+```
+cases passed       16/16
+resolution checks  54/54 (100%)
+citations found    6/6 (100%)
+```
+
+It earned itself immediately: `"what did anyone suggest"` resolved the act
+perfectly and cited nothing, because "anyone" was being used as a text
+filter. Indefinite pronouns are now stopwords.
+
+One case asserts resolution but deliberately **not** citations:
+`person_relationship`. Nothing populates `speaker_person_id` yet, so the
+person filter resolves and cannot narrow. That case is the tripwire for
+participant labelling - it starts citing when that lands.
 
 ## What I'd push back on
 

@@ -187,6 +187,13 @@ class MemoryResponse(BaseModel):
     conflicts_with: list[str]
     has_conflict: bool
     is_cross_conversation: bool
+    # Bi-temporal validity (phase E). `is_current` is the one a client
+    # needs most: whether this is the version still believed.
+    observed_at: datetime | None = None
+    valid_from: datetime | None = None
+    valid_to: datetime | None = None
+    superseded_by: str | None = None
+    is_current: bool = True
     #: Only set on search results.
     score: float | None = None
     matched_terms: list[str] | None = None
@@ -214,6 +221,11 @@ class MemoryResponse(BaseModel):
             conflicts_with=memory.conflicts_with,
             has_conflict=memory.has_conflict,
             is_cross_conversation=memory.is_cross_conversation,
+            observed_at=memory.observed_at,
+            valid_from=memory.valid_from,
+            valid_to=memory.valid_to,
+            superseded_by=memory.superseded_by,
+            is_current=memory.is_current,
             score=score,
             matched_terms=matched_terms,
         )
@@ -372,3 +384,17 @@ class HealthResponse(BaseModel):
 class ErrorResponse(BaseModel):
     code: str
     message: str
+
+
+class MemoryChange(BaseModel):
+    """A fact that has been revised, and how often.
+
+    The sentence no to-do list can produce: "your launch date has moved four
+    times". `change_count` counts closed validity intervals, so a fact heard
+    once and never revised is zero rather than one.
+    """
+
+    key: str
+    name: str
+    change_count: int
+    current: MemoryResponse | None = None

@@ -225,6 +225,7 @@ class MemoryService:
                 superseded.conflicts_with = sorted(
                     {*superseded.conflicts_with, memory.id}
                 )
+                self._invalidate(superseded, memory)
                 superseded.touch()
                 await self._memories.put(superseded)
                 existing.append(memory)
@@ -252,6 +253,7 @@ class MemoryService:
             await self._memories.put(conflict)
 
             match.conflicts_with = sorted({*match.conflicts_with, conflict.id})
+            self._invalidate(match, conflict)
             match.touch()
             await self._memories.put(match)
 
@@ -288,7 +290,33 @@ class MemoryService:
             mention_count=1,
             first_seen=session.started_at,
             last_seen=session.started_at,
+            # Phase E. We know when we were told; we almost never know when
+            # the fact became true, so `valid_from` mirrors it rather than
+            # inventing precision on the axis the feature rests on.
+            observed_at=session.started_at,
+            valid_from=session.started_at,
         )
+
+    @staticmethod
+    def _invalidate(old: Memory, new: Memory) -> None:
+        """Close the old version's validity at the moment we heard the new one.
+
+        This is the difference phase E makes. `conflicts_with` records *that*
+        two statements disagree; it cannot say which was believed in March.
+        Closing the interval makes "what did we think then", "when did it
+        change" and "how many times has it changed" answerable from the same
+        rows.
+
+        Nothing is deleted. The old row stays readable, and its own
+        `superseded_by` is what makes the chain walkable in order.
+        """
+        old.valid_to = new.heard_at
+        old.superseded_by = new.id
+        # A fact cannot stop being true before it started: a conversation
+        # recorded out of order would otherwise produce a negative interval
+        # that every as-of query would then mishandle.
+        if old.valid_to < old.became_true_at:
+            old.valid_to = old.became_true_at
 
     @staticmethod
     def _merge(
@@ -328,12 +356,23 @@ class MemoryService:
     def _resolve(
         self, candidate: MemoryCandidate, existing: list[Memory]
     ) -> Memory | None:
-        """Find the memory this candidate refers to, if any."""
+        """Find the memory this candidate refers to, if any.
+
+        Among several versions of one key, the **currently valid** one wins,
+        most recently heard first. Returning any version would make each new
+        change invalidate whichever row happened to be stored first: with
+        four statements about a launch date, the January version would be
+        closed four times while the March and May versions stayed "current",
+        and the change count would read 1 instead of 3. That only shows up
+        past two versions, which is why it survived phase E's first pass.
+        """
         same_kind = [m for m in existing if m.kind is candidate.kind]
 
-        for memory in same_kind:
-            if memory.key == candidate.key:
-                return memory
+        same_key = [m for m in same_kind if m.key == candidate.key]
+        if same_key:
+            current = [m for m in same_key if m.is_current]
+            pool = current or same_key
+            return max(pool, key=lambda m: m.heard_at)
 
         # People and projects get fuzzy name matching, so "Manan" and "Manan
         # Dudeja" do not become two entities. Facts do not: two differently
@@ -533,6 +572,57 @@ class MemoryService:
             await self._memories.put(other)
         await self._memories.delete(memory_id)
         log_event(logger, "memory.deleted", memory_id=memory_id)
+
+    # --- bi-temporal reads (phase E) --------------------------------------
+
+    async def as_of(
+        self, *, user_id: str, when: datetime
+    ) -> list[Memory]:
+        """What was believed true at `when`.
+
+        The question `conflicts_with` could never answer. "What did we think
+        the deadline was in February" needs the version whose validity
+        interval contained February, not the version that survived.
+        """
+        rows = await self._memories.list(user_id=user_id)
+        return sorted(
+            (row for row in rows if row.was_valid_at(when)),
+            key=lambda row: row.key,
+        )
+
+    async def history(self, *, user_id: str, key: str) -> list[Memory]:
+        """Every version of one fact, oldest first.
+
+        Matched on `key` rather than by walking `superseded_by`, because a
+        chain can be broken by a hand-deleted row and the key survives that.
+        The order is by when each version was heard, which is the order a
+        person would narrate the changes in.
+        """
+        rows = await self._memories.list(user_id=user_id, key=key)
+        return sorted(rows, key=lambda row: row.heard_at)
+
+    async def change_count(self, *, user_id: str, key: str) -> int:
+        """How many times this fact has been replaced.
+
+        The sentence no to-do list can produce: "your launch date has moved
+        four times". It is the number of *closed* intervals, so a fact heard
+        once and never revised is zero rather than one.
+        """
+        versions = await self.history(user_id=user_id, key=key)
+        return sum(1 for version in versions if version.valid_to is not None)
+
+    async def changed_facts(self, *, user_id: str) -> list[tuple[str, int]]:
+        """Keys that have been revised, most-revised first.
+
+        What a weekly review is built on: the things that keep moving are
+        the things worth looking at, and nothing else surfaces them.
+        """
+        rows = await self._memories.list(user_id=user_id)
+        counts: dict[str, int] = {}
+        for row in rows:
+            if row.valid_to is not None:
+                counts[row.key] = counts.get(row.key, 0) + 1
+        return sorted(counts.items(), key=lambda pair: -pair[1])
 
     async def delete_for_session(self, session_id: str) -> int:
         """Remove this session's contribution to memory.

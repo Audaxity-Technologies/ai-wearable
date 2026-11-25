@@ -125,7 +125,7 @@ answer with citations — and **ask when ambiguous** rather than guessing.
 image for *questions*, plus anchoring ("that day" anchors to what was just
 discussed, not to today).
 
-### 1c. Phase G — the retrieval eval set — alongside D, not after
+### 1c. Phase G — the retrieval eval set — DONE 2026-11-25
 
 Question → expected-citation pairs, built as D is built.
 
@@ -134,7 +134,7 @@ and one wrong label this month, and retrieval has strictly more ways to
 degrade silently. Borrow the question taxonomies from LongMemEval and LoCoMo
 rather than their scores.
 
-### 1d. Phase E — bi-temporal facts — 4–5 days
+### 1d. Phase E — bi-temporal facts — DONE 2026-11-25
 
 Give every fact `valid_from`/`valid_to` (true in the world) separately from
 `observed_at` (when we heard it). `Memory.conflicts_with` can say two
